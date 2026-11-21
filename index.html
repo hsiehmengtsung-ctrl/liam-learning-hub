@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Liam 學習複習中心 | Liam Learning Hub</title>
+  <style>
+    /* ==========================================================================
+       Design Tokens & Self-Contained Styles (No external dependencies)
+       ========================================================================== */
+    :root {
+      --bg-page: #f3f7fc;
+      --bg-surface: #ffffff;
+      --bg-muted: #eef3f9;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --border-light: #e2e8f0;
+      --border-focus: #0284c7;
+      --accent-blue: #0284c7;
+      --accent-blue-soft: #e0f2fe;
+      --accent-blue-dark: #0369a1;
+      --accent-green: #059669;
+      --accent-green-soft: #d1fae5;
+      --accent-amber: #d97706;
+      --accent-amber-soft: #fef3c7;
+      --accent-rose: #e11d48;
+      --accent-rose-soft: #ffe4e6;
+      --accent-violet: #7c3aed;
+      --accent-violet-soft: #ede9fe;
+      --accent-lime: #4d7c0f;
+      --accent-lime-soft: #ecfccb;
+      --shadow-card: 0 2px 10px rgba(15, 23, 42, 0.04);
+      --shadow-card-hover: 0 10px 24px rgba(15, 23, 42, 0.09);
+      --radius-xl: 22px;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background-color: var(--bg-page);
+      background-image:
+        radial-gradient(circle at 10% 6%, rgba(2, 132, 199, 0.11) 0%, transparent 28%),
+        radial-gradient(circle at 90% 10%, rgba(245, 158, 11, 0.12) 0%, transparent 30%),
+        radial-gradient(circle at 80% 92%, rgba(124, 58, 237, 0.09) 0%, transparent 32%);
+      color: var(--text-primary);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1060px;
+      margin: 0 auto;
+      padding: 18px 16px 64px;
+    }
+
+    /* ==========================================================================
+       Header & Filter Controls
+       ========================================================================== */
+    .hub-header {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-xl);
+      padding: 22px 18px;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 20px;
+    }
+
+    .header-top {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      width: fit-content;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: var(--accent-blue-soft);
+      color: var(--accent-blue-dark);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .hub-title {
+      margin: 0;
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.015em;
+      color: var(--text-primary);
+    }
+
+    .hub-subtitle {
+      margin: 6px 0 0;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .summary-strip {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-muted);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+    }
+
+    .summary-strip strong {
+      color: var(--text-primary);
+    }
+
+    .controls-panel {
+      margin-top: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Search Bar */
+    .search-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 40px 10px 42px;
+      border: 1.5px solid var(--border-light);
+      border-radius: var(--radius-md);
+      background: #f8fafc;
+      color: var(--text-primary);
+      font-size: 0.94rem;
+      transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .search-input:focus {
+      outline: none;
+      background: var(--bg-surface);
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.14);
+    }
+
+    .clear-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 26px;
+      height: 26px;
+      border: none;
+      border-radius: 999px;
+      background: #e2e8f0;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .clear-btn.is-visible {
+      display: inline-flex;
+    }
+
+    /* Filter Rows */
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .filter-label {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.03em;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pill-btn {
+      appearance: none;
+      min-height: 36px;
+      padding: 6px 13px;
+      border-radius: 999px;
+      border: 1.5px solid var(--border-light);
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      font-size: 0.84rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .pill-btn:hover {
+      border-color: #cbd5e1;
+      background: #f8fafc;
+      color: var(--text-primary);
+    }
+
+    .pill-btn.active {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+      color: #ffffff;
+      box-shadow: 0 3px 10px rgba(2, 132, 199, 0.22);
+    }
+
+    .sub-pill.active {
+      background: var(--text-primary);
+      border-color: var(--text-primary);
+      color: #ffffff;
+      box-shadow: none;
+    }
+
+    /* ==========================================================================
+       Grade & Topic Sections
+       ========================================================================== */
+    .hub-section {
+      margin-top: 26px;
+    }
+
+    .hub-section.is-hidden {
+      display: none;
+    }
+
+    .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border-light);
+    }
+
+    .section-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-badge-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-sm);
+      background: var(--accent-blue-soft);
+      color: var(--accent-blue-dark);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+
+    .section-note {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    @media (min-width: 640px) {
+      .container {
+        padding: 24px 20px 72px;
+      }
+      .hub-header {
+        padding: 26px;
+      }
+      .header-top {
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: space-between;
+      }
+      .hub-title {
+        font-size: 1.85rem;
+      }
+      .card-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 960px) {
+      .card-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    /* ==========================================================================
+       Learning Cards & Placeholders
+       ========================================================================== */
+    .card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-decoration: none;
+      color: inherit;
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      box-shadow: var(--shadow-card);
+      transition: transform 0.17s ease, box-shadow 0.17s ease, border-color 0.17s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-card-hover);
+      border-color: #7dd3fc;
+    }
+
+    .card.is-hidden {
+      display: none;
+    }
+
+    .card--placeholder {
+      background: rgba(255, 255, 255, 0.72);
+      border-style: dashed;
+      border-color: #cbd5e1;
+      cursor: default;
+    }
+
+    .card--placeholder:hover {
+      transform: none;
+      box-shadow: var(--shadow-card);
+      border-color: #cbd5e1;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .subject-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+
+    .chip-english { background: var(--accent-blue-soft); color: var(--accent-blue-dark); }
+    .chip-math { background: var(--accent-amber-soft); color: var(--accent-amber); }
+    .chip-mandarin { background: var(--accent-rose-soft); color: var(--accent-rose); }
+    .chip-science { background: var(--accent-green-soft); color: var(--accent-green); }
+    .chip-social { background: var(--accent-violet-soft); color: var(--accent-violet); }
+    .chip-minecraft { background: var(--accent-lime-soft); color: var(--accent-lime); }
+    .chip-music { background: var(--accent-violet-soft); color: var(--accent-violet); }
+
+    .status-pill {
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 3px 9px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .status-pill--ready {
+      background: var(--accent-green-soft);
+      color: var(--accent-green);
+    }
+
+    .status-pill--soon {
+      background: var(--bg-muted);
+      color: var(--text-muted);
+    }
+
+    .card-title {
+      margin: 0 0 6px;
+      font-size: 1.04rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.35;
+    }
+
+    .card-desc {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .card-bottom {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.76rem;
+    }
+
+    .card-path {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      background: #f8fafc;
+      padding: 2px 6px;
+      border-radius: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .card-link-label {
+      font-weight: 700;
+      color: var(--accent-blue);
+      flex-shrink: 0;
+    }
+
+    /* Empty State */
+    .empty-box {
+      display: none;
+      text-align: center;
+      background: var(--bg-surface);
+      border: 1.5px dashed #cbd5e1;
+      border-radius: var(--radius-xl);
+      padding: 40px 20px;
+      margin-top: 24px;
+    }
+
+    .empty-box.is-visible {
+      display: block;
+    }
+
+    .empty-box h3 {
+      margin: 8px 0 4px;
+      font-size: 1.08rem;
+    }
+
+    .empty-box p {
+      margin: 0 0 14px;
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+    }
+
+    .reset-btn {
+      min-height: 40px;
+      padding: 8px 18px;
+      border: none;
+      border-radius: 999px;
+      background: var(--accent-blue);
+      color: #ffffff;
+      font-size: 0.86rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .hub-footer {
+      margin-top: 44px;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- ======================================================================
+         Header & Search / Grade / Subject Filters
+         ====================================================================== -->
+    <header class="hub-header">
+      <div class="header-top">
+        <div>
+          <span class="eyebrow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+            LIAM LEARNING HUB · 目前主視角：二年級 (G02)
+          </span>
+          <h1 class="hub-title">Liam 學習複習中心</h1>
+          <p class="hub-subtitle">
+            國小至高中互動複習卡、學科整理與跨年級專題探索（支援手機與電腦直接開啟）
+          </p>
+        </div>
+
+        <div class="summary-strip" aria-label="教材狀態摘要">
+          <span>目前焦點：<strong>二年級 G02</strong></span>
+          <span>·</span>
+          <span>已上線：<strong id="readyTotal">1</strong> 份</span>
+          <span>·</span>
+          <span>顯示：<strong id="shownTotal">0</strong> 項</span>
+        </div>
+      </div>
+
+      <div class="controls-panel">
+        <!-- Instant Keyword Search -->
+        <div class="search-wrapper">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            id="searchInput"
+            class="search-input"
+            type="search"
+            placeholder="搜尋單字、單元、科目或專題（例如：Spelling、Unit 7、數學、麥塊、音樂...）"
+            aria-label="搜尋教材關鍵字"
+          />
+          <button id="clearBtn" class="clear-btn" type="button" aria-label="清除搜尋文字">✕</button>
+        </div>
+
+        <!-- Grade Filter Tabs (G02 default active) -->
+        <div class="filter-group">
+          <span class="filter-label">年級與專題篩選</span>
+          <div class="pill-row" id="gradeFilterRow" role="group" aria-label="年級篩選">
+            <button class="pill-btn active" type="button" data-grade="g02">二年級 G02（目前）</button>
+            <button class="pill-btn" type="button" data-grade="all">全部 (All)</button>
+            <button class="pill-btn" type="button" data-grade="g01">一年級 G01（過去紀錄）</button>
+            <button class="pill-btn" type="button" data-grade="g03-g06">三～六年級 G03–G06</button>
+            <button class="pill-btn" type="button" data-grade="g07-g12">國高中 G07–G12</button>
+            <button class="pill-btn" type="button" data-grade="topics">跨年級專題 Topics</button>
+          </div>
+        </div>
+
+        <!-- Subject Sub-Filter Tabs -->
+        <div class="filter-group">
+          <span class="filter-label">科目與專題子篩選</span>
+          <div class="pill-row" id="subjectFilterRow" role="group" aria-label="科目篩選">
+            <button class="pill-btn sub-pill active" type="button" data-subject="all">全部科目</button>
+            <button class="pill-btn sub-pill" type="button" data-subject="english">英文 English</button>
+            <button class="pill-btn sub-pill" type="button" data-subject="math">數學 Math</button>
+            <button class="pill-btn sub-pill" type="button" data-subject="mandarin">國語 Mandarin</button>
+            <button class="pill-btn sub-pill" type="button" data-subject="science">自然 Science</button>
+            <button class="pill-btn sub-pill" type="button" data-subject="social">社會 Social</button>
+            <button class="pill-btn sub-pill" type="button" data-subject="minecraft">麥塊 Minecraft</button>
+            <button class="pill-btn sub-pill" type="button" data-subject="music">音樂 Music</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ======================================================================
+         1. Grade 2 (G02) - Current Primary Grade
+         ====================================================================== -->
+    <section class="hub-section" data-section-grade="g02">
+      <div class="section-head">
+        <div class="section-title-wrap">
+          <span class="section-badge-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+          </span>
+          <div>
+            <h2 class="section-title">二年級學習區（目前主視角）</h2>
+            <div class="section-note">Grade 2 (g02/) · 英文、數學、國語、自然與社會</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-grid">
+        <!--
+          【新增 G02 教材卡片範本】
+          複製下方 <a class="card" ...> 區塊，修改 href、data-subject、樣式與文字即可：
+
+          <a
+            class="card"
+            href="./g02/english/g2-en-unit1.html"
+            data-subject="english"
+            data-status="ready"
+            data-keywords="g02 二年級 英文 english unit 1 單字"
+          >
+            <div>
+              <div class="card-meta">
+                <span class="subject-chip chip-english">英文 English</span>
+                <span class="status-pill status-pill--ready">已上線</span>
+              </div>
+              <h3 class="card-title">二年級英文 Unit 1 單字卡</h3>
+              <p class="card-desc">含圖示、自然拼讀提示、語音發音與例句練習。</p>
+            </div>
+            <div class="card-bottom">
+              <span class="card-path">g02/english/g2-en-unit1.html</span>
+              <span class="card-link-label">開啟卡片 →</span>
+            </div>
+          </a>
+        -->
+
+        <div class="card card--placeholder" data-subject="english" data-status="soon" data-keywords="g02 二年級 英文 english 單字 拼字 phonics">
+          <div>
+            <div class="card-meta">
+              <span class="subject-chip chip-english">英文 English</span>
+              <span class="status-pill status-pill--soon">待新增 · g02/english/</span>
+            </div>
+            <h3 class="card-title">二年級英文單字與句型卡</h3>
+            <p class="card-desc">預留位置：可放置二年級英文單字、Phonics 拼讀與會話練習卡（./g02/english/...）。</p>
+          </div>
+          <div class="card-bottom">
+            <span class="card-path">g02/english/...</span>
+            <span>準備中</span>
+          </div>
+        </div>
+
+        <div class="card card--placeholder" data-subject="math" data-status="soon" data-keywords="g02 二年級 數學 math 加減法 乘法 幾點幾分 測量">
+          <div>
+            <div class="card-meta">
+              <span class="subject-chip chip-math">數學 Math</span>
+              <span class="status-pill status-pill--soon">待新增 · g02/math/</span>
+            </div>
+            <h3 class="card-title">二年級數學互動練習卡</h3>
+            <p class="card-desc">預留位置：可放置二位數加減、乘法概念、長度測量與時間練習（./g02/math/...）。</p>
+          </div>
+          <div class="card-bottom">
+            <span class="card-path">g02/math/...</span>
+            <span>準備中</span>
+          </div>
+        </div>
+
+        <div class="card card--placeholder" data-subject="mandarin" data-status="soon" data-keywords="g02 二年級 國語 mandarin 生字 造詞 成語 閱讀">
+          <div>
+            <div class="card-meta">
+              <span class="subject-chip chip-mandarin">國語 Mandarin</span>
+              <span class="status-pill status-pill--soon">待新增 · g02/mandarin/</span>
+            </div>
+            <h3 class="card-title">二年級國語生字與造詞卡</h3>
+            <p class="card-desc">預留位置：可放置課文生字、部首結構、多音字與短語造詞練習（./g02/mandarin/...）。</p>
+          </div>
+          <div class="card-bottom">
+            <span class="card-path">g02/mandarin/...</span>
+            <span>準備中</span>
+          </div>
+        </div>
+
+        <div class="card card--placeholder" data-subject="science" data-status="soon" data-keywords="g02 二年級 自然 science 生活 觀察 植物 昆蟲">
+          <div>
+            <div class="card-meta">
+              <span class="subject-chip chip-science">自然 Science</span>
+              <span class="status-pill status-pill--soon">待新增 · g02/science/</span>
+            </div>
+            <h3 class="card-title">二年級自然與生活觀察卡</h3>
+            <p class="card-desc">預留位置：可放置動植物觀察、天氣變化與生活科學探索卡片（./g02/science/...）。</p>
+          </div>
+          <div class="card-bottom">
+            <span class="card-path">g02/science/...</span>
+            <span>準備中</span>
+          </div>
+        </div>
+
+        <div class="card card--placeholder" data-subject="social" data-status="soon" data-keywords="g02 二年級 社會 social 家庭 社區 規範">
+          <div>
+            <div class="card-meta">
+              <span class="subject-chip chip-social">社會 Social</span>
+              <span class="status-pill status-pill--soon">待新增 · g02/social/</span>
+            </div>
+            <h3 class="card-title">二年級社會與生活規範卡</h3>
+            <p class="card-desc">預留位置：可放置家庭分工、社區環境與生活常規互動卡片（./g02/social/...）。</p>
+          </div>
+          <div class="card-bottom">
+            <span class="card-path">g02/social/...</span>
+            <span>準備中</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         2. Grade 1 (G01) - Past Grade Record
+         ====================================================================== -->
+    <section class="hub-section is-hidden" data-section-grade="g01">
+      <div class="section-head">
+        <div class="section-title-wrap">
+          <span class="section-badge-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 8v4l3 3"></path>
+              <circle cx="12" cy="12" r="9"></circle>
+            </svg>
+          </span>
+          <div>
+            <h2 class="section-title">一年級學習紀錄（過去年級）</h2>
+            <div class="section-note">Grade 1 (g01/) · 保留歷年複習卡片供隨時回顧</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-grid">
+        <a
+          class="card"
+          href="./g01/english/1b-spelling-u7-u8.html"
+          data-subject="english"
+          data-status="ready"
+          data-keywords="g01 一年級 過去紀錄 english 英文 spelling contest 1b unit 7 unit 8 goat lamb too new"
+        >
+          <div>
+            <div class="card-meta">
+              <span class="subject-chip chip-english">英文 English</span>
+              <span class="status-pill status-pill--ready">已上線 · G01</span>
+            </div>
+            <h3 class="card-title">1B Spelling Contest Wordlist (Unit 7–8)</h3>
+            <p class="card-desc">共 48 個拼字單字（Unit 7 L1–L3 與 Unit 8 L1），含 SVG 圖示、自然拼讀與發音。</p>
+          </div>
+          <div class="card-bottom">
+            <span class="card-path">g01/english/1b-spelling-u7-u8.html</span>
+            <span class="card-link-label">開啟卡片 →</span>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         3. Grades 3–6 (G03–G06) - Future Elementary Expansion
+         ====================================================================== -->
+    <section class="hub-section is-hidden" data-section-grade="g03-g06">
+      <div class="section-head">
+        <div class="section-title-wrap">
+          <span class="section-badge-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+              <line x1="7" y1="8" x2="17" y2="8"></line>
+              <line x1="7" y1="12" x2="13" y2="12"></line>
+            </svg>
+          </span>
+          <div>
+            <h2 class="section-title">國小三～六年級擴充區</h2>
+            <div class="section-note">Grades 3–6 (g03/ ~ g06/) · 隨年級升級逐步建立</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-grid">
+        <!--
+          【新增 G03–G06 教材卡片範本】
+          <a class="card" href="./g03/math/g3-math-ch1.html" data-subject="math" data-status="ready" data-keywords="g03 三年級 數學 math">
+            <div>
+              <div class="card-meta">
+                <span class="subject-chip chip-math">G03 · 數學 Math</span>
+                <span class="status-pill status-pill--ready">已上線</span>
+              </div>
+              <h3 class="card-title">三年級數學單元一</h3>
+              <p class="card-desc">單元重點複習與互動練習。</p>
+            </div>
+            <div class="card-bottom">
+              <span class="card-path">g03/math/g3-math-ch1.html</span>
+              <span class="card-link-label">開啟卡片 →</span>
+            </div>
+          </a>
+        -->
+        <div class="card card--placeholder" data-subject="math" data-status="soon" data-keywords="g03 g04 g05 g06 三年級 四年級 五年級 六年級 數學 英文 自然 社會 國語">
+          <div>
+            <div class="card-meta">
+              <span class="subject-chip chip-math">G03 – G06 預留區</span>
+              <span class="status-pill status-pill--soon">未來擴充</span>
+            </div>
+            <h3 class="card-title">國小中高年級各科教材區</h3>
+            <p class="card-desc">未來升上三年級後，可依 g03/、g04/、g05/、g06/ 與各科子資料夾新增複習卡片。</p>
+          </div>
+          <div class="card-bottom">
+            <span class="card-path">g03/ ~ g06/&lt;subject&gt;/</span>
+            <span>待啟用</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         4. Grades 7–12 (G07–G12) - Junior & Senior High School
+         ====================================================================== -->
+    <section class="hub-section is-hidden" data-section-grade="g07-g12">
+      <div class="section-head">
+        <div class="section-title-wrap">
+          <span class="section-badge-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+            </svg>
+          </span>
+          <div>
+            <h2 class="section-title">國中與高中進階區</h2>
+            <div class="section-note">Grades 7–12 (g07/ ~ g12/) · 長期學習資料庫</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-grid">
+        <div class="card card--placeholder" data-subject="science" data-status="soon" data-keywords="g07 g08 g09 g10 g11 g12 國中 高中 理化 生物 英文 數學 歷史 地理">
+          <div>
+            <div class="card-meta">
+              <span class="subject-chip chip-science">G07 – G12 預留區</span>
+              <span class="status-pill status-pill--soon">長期規劃</span>
+            </div>
+            <h3 class="card-title">國高中核心概念與複習卡片庫</h3>
+            <p class="card-desc">預留給未來國中至高中的各科重點整理、公式與單字複習卡（g07/ 至 g12/）。</p>
+          </div>
+          <div class="card-bottom">
+            <span class="card-path">g07/ ~ g12/&lt;subject&gt;/</span>
+            <span>待啟用</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         5. Cross-Grade Topics (Minecraft, Music, etc.)
+         ====================================================================== -->
+    <section class="hub-section is-hidden" data-section-grade="topics">
+      <div class="section-head">
+        <div class="section-title-wrap">
+          <span class="section-badge-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+          </span>
+          <div>
+            <h2 class="section-title">跨年級專題探索</h2>
+            <div class="section-note">Topics (topics/) · Minecraft、音樂與其他興趣專題</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-grid">
+        <!--
+          【新增跨年級專題卡片範本】
+          <a class="card" href="./topics/minecraft/redstone-intro.html" data-subject="minecraft" data-status="ready" data-keywords="topics minecraft 麥塊 紅石">
+            <div>
+              <div class="card-meta">
+                <span class="subject-chip chip-minecraft">麥塊 Minecraft</span>
+                <span class="status-pill status-pill--ready">已上線</span>
+              </div>
+              <h3 class="card-title">麥塊紅石入門卡</h3>
+              <p class="card-desc">認識常見紅石元件與邏輯互動。</p>
+            </div>
+            <div class="card-bottom">
+              <span class="card-path">topics/minecraft/redstone-intro.html</span>
+              <span class="card-link-label">開啟專題 →</span>
+            </div>
+          </a>
+        -->
+
+        <div class="card card--placeholder" data-subject="minecraft" data-status="soon" data-keywords="topics minecraft 麥塊 紅石 指令 方塊 建築">
+          <div>
+            <div class="card-meta">
+              <span class="subject-chip chip-minecraft">麥塊 Minecraft</span>
+              <span class="status-pill status-pill--soon">待新增 · topics/minecraft/</span>
+            </div>
+            <h3 class="card-title">Minecraft 麥塊學習專題</h3>
+            <p class="card-desc">預留位置：可放置麥塊英文詞彙、紅石邏輯、建築比例與指令教學卡片（./topics/minecraft/...）。</p>
+          </div>
+          <div class="card-bottom">
+            <span class="card-path">topics/minecraft/...</span>
+            <span>準備中</span>
+          </div>
+        </div>
+
+        <div class="card card--placeholder" data-subject="music" data-status="soon" data-keywords="topics music 音樂 節拍 五線譜 音符 樂理">
+          <div>
+            <div class="card-meta">
+              <span class="subject-chip chip-music">音樂 Music</span>
+              <span class="status-pill status-pill--soon">待新增 · topics/music/</span>
+            </div>
+            <h3 class="card-title">音樂節拍與五線譜專題</h3>
+            <p class="card-desc">預留位置：可放置節拍練習、音符辨識與基礎樂理互動卡片（./topics/music/...）。</p>
+          </div>
+          <div class="card-bottom">
+            <span class="card-path">topics/music/...</span>
+            <span>準備中</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Empty Filter Result -->
+    <div id="emptyBox" class="empty-box" role="status">
+      <div aria-hidden="true">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </div>
+      <h3>目前沒有符合條件的教材</h3>
+      <p>可嘗試切換「全部 (All)」或「全部科目」，或清除搜尋關鍵字。</p>
+      <button id="resetFilterBtn" class="reset-btn" type="button">重設篩選（回到 G02）</button>
+    </div>
+
+    <footer class="hub-footer">
+      Liam Learning Hub · 單檔自包含靜態學習平台（G01–G12 &amp; Topics）
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      const searchInput = document.getElementById('searchInput');
+      const clearBtn = document.getElementById('clearBtn');
+      const gradeButtons = Array.from(document.querySelectorAll('#gradeFilterRow .pill-btn'));
+      const subjectButtons = Array.from(document.querySelectorAll('#subjectFilterRow .sub-pill'));
+      const sections = Array.from(document.querySelectorAll('.hub-section'));
+      const allCards = Array.from(document.querySelectorAll('.card'));
+      const emptyBox = document.getElementById('emptyBox');
+      const resetFilterBtn = document.getElementById('resetFilterBtn');
+      const readyTotalEl = document.getElementById('readyTotal');
+      const shownTotalEl = document.getElementById('shownTotal');
+
+      // Default active grade is Grade 2 ("g02") as Liam is currently in Grade 2
+      let selectedGrade = 'g02';
+      let selectedSubject = 'all';
+      let searchTerm = '';
+
+      const readyCount = allCards.filter((card) => card.dataset.status === 'ready').length;
+      if (readyTotalEl) {
+        readyTotalEl.textContent = String(readyCount);
+      }
+
+      function updateView() {
+        const query = searchTerm.trim().toLowerCase();
+        let visibleCount = 0;
+
+        sections.forEach((section) => {
+          const sectionGrade = section.dataset.sectionGrade;
+          const gradeMatch = selectedGrade === 'all' || selectedGrade === sectionGrade;
+
+          if (!gradeMatch) {
+            section.classList.add('is-hidden');
+            return;
+          }
+
+          const cardsInSection = Array.from(section.querySelectorAll('.card'));
+          let visibleInSection = 0;
+
+          cardsInSection.forEach((card) => {
+            const cardSubject = card.dataset.subject || '';
+            const subjectMatch = selectedSubject === 'all' || selectedSubject === cardSubject;
+
+            const searchableText = (
+              card.textContent + ' ' + (card.dataset.keywords || '')
+            ).toLowerCase();
+            const keywordMatch = !query || searchableText.includes(query);
+
+            if (subjectMatch && keywordMatch) {
+              card.classList.remove('is-hidden');
+              visibleInSection += 1;
+              visibleCount += 1;
+            } else {
+              card.classList.add('is-hidden');
+            }
+          });
+
+          if (visibleInSection === 0) {
+            section.classList.add('is-hidden');
+          } else {
+            section.classList.remove('is-hidden');
+          }
+        });
+
+        if (shownTotalEl) {
+          shownTotalEl.textContent = String(visibleCount);
+        }
+
+        if (emptyBox) {
+          emptyBox.classList.toggle('is-visible', visibleCount === 0);
+        }
+
+        if (clearBtn) {
+          clearBtn.classList.toggle('is-visible', query.length > 0);
+        }
+      }
+
+      gradeButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          gradeButtons.forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedGrade = btn.dataset.grade || 'g02';
+          updateView();
+        });
+      });
+
+      subjectButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          subjectButtons.forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedSubject = btn.dataset.subject || 'all';
+          updateView();
+        });
+      });
+
+      searchInput.addEventListener('input', (e) => {
+        searchTerm = e.target.value;
+        updateView();
+      });
+
+      clearBtn.addEventListener('click', () => {
+        searchTerm = '';
+        searchInput.value = '';
+        updateView();
+        searchInput.focus();
+      });
+
+      resetFilterBtn.addEventListener('click', () => {
+        selectedGrade = 'g02';
+        selectedSubject = 'all';
+        searchTerm = '';
+        searchInput.value = '';
+
+        gradeButtons.forEach((b) => {
+          b.classList.toggle('active', b.dataset.grade === 'g02');
+        });
+        subjectButtons.forEach((b) => {
+          b.classList.toggle('active', b.dataset.subject === 'all');
+        });
+        updateView();
+      });
+
+      updateView();
+    })();
+  </script>
+</body>
+</html>
