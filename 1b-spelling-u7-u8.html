@@ -1,0 +1,1828 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Liam's 1B Spelling Contest Flash Cards</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Fredoka', 'Noto Sans TC', 'sans-serif'],
+            sans: ['Inter', 'Noto Sans TC', 'sans-serif'],
+          },
+          colors: {
+            brandSky: '#38BDF8',
+            brandSun: '#FACC15',
+            brandCoral: '#FB7185',
+            brandMint: '#34D399',
+            brandViolet: '#A78BFA',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    /* 3D Card Flip Mechanics */
+    .perspective-1200 {
+      perspective: 1200px;
+    }
+
+    .flashcard-inner {
+      position: relative;
+      width: 100%;
+      min-height: 430px;
+      transform-style: preserve-3d;
+      transition: transform 0.55s cubic-bezier(0.34, 1.4, 0.64, 1);
+    }
+
+    .flashcard-inner.is-flipped {
+      transform: rotateY(180deg);
+    }
+
+    .flashcard-face {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      position: absolute;
+      inset: 0;
+    }
+
+    .flashcard-back {
+      transform: rotateY(180deg);
+    }
+
+    /* Gentle playful background pattern */
+    body {
+      background-color: #f0f9ff;
+      background-image:
+        radial-gradient(circle at 12% 15%, rgba(250, 204, 21, 0.18) 0%, transparent 28%),
+        radial-gradient(circle at 88% 18%, rgba(56, 189, 248, 0.18) 0%, transparent 32%),
+        radial-gradient(circle at 82% 85%, rgba(167, 139, 250, 0.16) 0%, transparent 30%),
+        radial-gradient(circle at 18% 82%, rgba(52, 211, 153, 0.16) 0%, transparent 28%);
+    }
+
+    /* Print styling for Wordlist Grid Overview */
+    @media print {
+      body {
+        background: #ffffff !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-only-grid {
+        display: grid !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-800 font-sans antialiased selection:bg-sky-200 selection:text-sky-900">
+  <!-- App Container -->
+  <div class="max-w-5xl mx-auto px-4 py-5 sm:py-7">
+    <!-- Top Header -->
+    <header class="bg-white/95 backdrop-blur border-2 border-sky-100 rounded-3xl shadow-sm p-4 sm:p-6 mb-5 no-print">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs sm:text-sm font-semibold mb-2">
+            <span>⭐</span>
+            <span>1B Spelling Contest Wordlist · 48 個拼字單字卡</span>
+          </div>
+          <h1 class="font-display text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+            Liam's 1B Spelling Contest Flash Cards
+          </h1>
+          <p class="text-xs sm:text-sm text-slate-500 mt-1">
+            點擊卡片翻面看中文解釋與自然發音提示 · 支援鍵盤方向鍵（← / →）與空白鍵（Space）翻卡
+          </p>
+        </div>
+
+        <!-- Action Buttons: Shuffle & Word Grid Modal -->
+        <div class="flex flex-wrap items-center gap-2.5">
+          <button
+            id="shuffleBtn"
+            type="button"
+            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl border-2 border-violet-200 bg-violet-50 hover:bg-violet-100 active:scale-95 text-violet-800 font-semibold text-sm transition cursor-pointer"
+            aria-label="隨機洗牌"
+          >
+            <span id="shuffleIcon">🔀</span>
+            <span id="shuffleLabel">隨機順序：關</span>
+          </button>
+
+          <button
+            id="openGridBtn"
+            type="button"
+            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl border-2 border-sky-200 bg-sky-50 hover:bg-sky-100 active:scale-95 text-sky-800 font-semibold text-sm transition cursor-pointer"
+            aria-label="單字總覽表"
+          >
+            <span>📋</span>
+            <span>48字總覽表</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Unit / Lesson Filter Tabs -->
+      <nav id="unitTabs" class="mt-5 flex flex-wrap gap-2" aria-label="單元篩選">
+        <!-- Populated by JS -->
+      </nav>
+    </header>
+
+    <!-- Progress & Mastery Bar -->
+    <section class="bg-white/90 border border-slate-200/80 rounded-2xl px-4 py-3.5 mb-5 shadow-xs no-print">
+      <div class="flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm font-medium mb-2">
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 font-bold" id="progressCounter">
+            第 1 / 48 張
+          </span>
+          <span id="activeUnitBadge" class="text-slate-600 font-semibold">全部單元 (All Units)</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-emerald-700 font-semibold">✅ 已學會：<strong id="masteredCount">0</strong></span>
+          <span class="text-amber-700 font-semibold">🔁 需加強：<strong id="practiceCount">0</strong></span>
+          <button
+            id="resetProgressBtn"
+            type="button"
+            class="text-xs text-slate-400 hover:text-rose-500 underline transition cursor-pointer"
+          >
+            重設紀錄
+          </button>
+        </div>
+      </div>
+      <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+        <div
+          id="progressBarFill"
+          class="h-full bg-gradient-to-r from-sky-400 via-violet-400 to-emerald-400 rounded-full transition-all duration-300"
+          style="width: 2.08%;"
+        ></div>
+      </div>
+    </section>
+
+    <!-- Main Flash Card Stage -->
+    <main class="max-w-2xl mx-auto no-print">
+      <div class="perspective-1200 mb-5">
+        <div id="flashcardInner" class="flashcard-inner cursor-pointer" role="button" tabindex="0" aria-label="翻轉單字卡">
+          <!-- FRONT FACE -->
+          <div
+            id="cardFront"
+            class="flashcard-face bg-white border-2 border-sky-200/90 rounded-3xl shadow-md p-5 sm:p-7 flex flex-col justify-between"
+          >
+            <!-- Top Row: Unit tag & Status badge -->
+            <div class="flex items-center justify-between gap-2">
+              <span
+                id="frontUnitTag"
+                class="px-3 py-1 rounded-full text-xs font-bold bg-sky-100 text-sky-800"
+              >
+                Unit 7 Lesson 1
+              </span>
+              <span
+                id="frontStatusBadge"
+                class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500"
+              >
+                尚未標記
+              </span>
+            </div>
+
+            <!-- Center Illustration + English Word -->
+            <div class="my-3 flex flex-col items-center text-center">
+              <div
+                id="illustrationBox"
+                class="w-40 h-40 sm:w-48 sm:h-48 rounded-3xl bg-gradient-to-b from-sky-50 to-amber-50/70 border-2 border-dashed border-sky-200 flex items-center justify-center p-3 mb-4 shadow-inner"
+              >
+                <!-- SVG Illustration injected here -->
+              </div>
+
+              <h2
+                id="frontWord"
+                class="font-display text-4xl sm:text-5xl font-bold text-slate-900 tracking-wide select-none"
+              >
+                goat
+              </h2>
+              <p id="frontPhoneticHint" class="text-xs sm:text-sm font-medium text-violet-600 mt-1.5">
+                Phonics: oa 發長母音 /oʊ/
+              </p>
+            </div>
+
+            <!-- Bottom Row: Pronunciation Audio Button & Flip Hint -->
+            <div class="flex items-center justify-between gap-3 pt-2 border-t border-slate-100">
+              <button
+                id="speakFrontBtn"
+                type="button"
+                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-sky-500 hover:bg-sky-600 active:scale-95 text-white font-semibold text-sm shadow-sm transition cursor-pointer"
+                aria-label="播放英文發音"
+              >
+                <span>🔊</span>
+                <span>聽發音 (en-US)</span>
+              </button>
+
+              <button
+                id="flipToBackBtn"
+                type="button"
+                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs sm:text-sm transition cursor-pointer"
+              >
+                <span>翻看中文與例句</span>
+                <span>↻</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- BACK FACE -->
+          <div
+            id="cardBack"
+            class="flashcard-face flashcard-back bg-white border-2 border-violet-200/90 rounded-3xl shadow-md p-5 sm:p-7 flex flex-col justify-between"
+          >
+            <!-- Top Row -->
+            <div class="flex items-center justify-between gap-2">
+              <span class="px-3 py-1 rounded-full text-xs font-bold bg-violet-100 text-violet-800">
+                單字解析 · Details
+              </span>
+              <button
+                id="flipToFrontBtn"
+                type="button"
+                class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer"
+              >
+                <span>↻ 回到正面</span>
+              </button>
+            </div>
+
+            <!-- Middle Content: Word + Chinese Meaning + Phonics + Example Sentence -->
+            <div class="my-2 space-y-3">
+              <div class="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-100 pb-2.5">
+                <div class="flex items-center gap-2.5">
+                  <span id="backWord" class="font-display text-2xl sm:text-3xl font-bold text-slate-900">goat</span>
+                  <button
+                    id="speakBackWordBtn"
+                    type="button"
+                    class="px-2.5 py-1 rounded-xl bg-sky-100 hover:bg-sky-200 text-sky-800 text-xs font-bold transition cursor-pointer"
+                    title="播放單字發音"
+                  >
+                    🔊 單字
+                  </button>
+                </div>
+                <span id="backMeaning" class="text-xl sm:text-2xl font-bold text-rose-600">山羊</span>
+              </div>
+
+              <!-- Phonics / Spelling Rule Box -->
+              <div class="bg-amber-50/90 border border-amber-200/80 rounded-2xl p-3">
+                <div class="text-xs font-bold text-amber-800 uppercase tracking-wider mb-0.5">
+                  💡 自然拼讀與拼字提示 (Phonics & Spelling Tip)
+                </div>
+                <p id="backPhonics" class="text-sm text-slate-700 leading-relaxed"></p>
+              </div>
+
+              <!-- Example Sentence Box -->
+              <div class="bg-sky-50/80 border border-sky-200/80 rounded-2xl p-3">
+                <div class="flex items-center justify-between gap-2 mb-1">
+                  <span class="text-xs font-bold text-sky-800 uppercase tracking-wider">
+                    📖 例句 (Example Sentence)
+                  </span>
+                  <button
+                    id="speakSentenceBtn"
+                    type="button"
+                    class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold transition cursor-pointer"
+                  >
+                    <span>🔊</span>
+                    <span>聽例句</span>
+                  </button>
+                </div>
+                <p id="backSentenceEn" class="text-sm sm:text-base font-semibold text-slate-800"></p>
+                <p id="backSentenceZh" class="text-xs sm:text-sm text-slate-600 mt-0.5"></p>
+              </div>
+            </div>
+
+            <!-- Bottom Row: Self-Check Buttons ("Got it" / "Need practice") -->
+            <div class="pt-2 border-t border-slate-100">
+              <div class="text-xs text-slate-500 mb-2 text-center font-medium">
+                這題拼字與意思你熟悉了嗎？標記一下：
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <button
+                  id="markGotItBtn"
+                  type="button"
+                  class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl border-2 border-emerald-300 bg-emerald-50 hover:bg-emerald-100 active:scale-98 text-emerald-800 font-bold text-sm transition cursor-pointer"
+                >
+                  <span>✅</span>
+                  <span>Got it (已學會)</span>
+                </button>
+                <button
+                  id="markPracticeBtn"
+                  type="button"
+                  class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl border-2 border-amber-300 bg-amber-50 hover:bg-amber-100 active:scale-98 text-amber-800 font-bold text-sm transition cursor-pointer"
+                >
+                  <span>🔁</span>
+                  <span>Need practice (再練習)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Previous / Next Navigation Controls -->
+      <div class="flex items-center justify-between gap-3 mb-4">
+        <button
+          id="prevCardBtn"
+          type="button"
+          class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-white hover:bg-slate-50 active:scale-98 border-2 border-slate-200 text-slate-800 font-bold text-sm shadow-xs transition cursor-pointer"
+        >
+          <span>←</span>
+          <span>上一張</span>
+        </button>
+
+        <div class="hidden sm:flex items-center gap-2 text-xs text-slate-500 bg-white/80 px-3.5 py-2 rounded-full border border-slate-200/70">
+          <span>快捷鍵：</span>
+          <kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-300 rounded text-slate-700 font-mono">←</kbd>
+          <kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-300 rounded text-slate-700 font-mono">→</kbd>
+          <span>換卡</span>
+          <kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-300 rounded text-slate-700 font-mono">Space</kbd>
+          <span>翻面</span>
+        </div>
+
+        <button
+          id="nextCardBtn"
+          type="button"
+          class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-sky-500 hover:bg-sky-600 active:scale-98 text-white font-bold text-sm shadow-sm transition cursor-pointer"
+        >
+          <span>下一張</span>
+          <span>→</span>
+        </button>
+      </div>
+
+      <!-- Speech Status / Toast Banner -->
+      <div
+        id="statusToast"
+        class="hidden text-center text-xs sm:text-sm font-medium px-4 py-2.5 rounded-2xl bg-slate-800 text-white shadow-sm"
+      ></div>
+    </main>
+
+    <!-- Wordlist Grid Overview Modal (also supports printing) -->
+    <div
+      id="gridModal"
+      class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-xs overflow-y-auto p-4 sm:p-6"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="gridModalTitle"
+    >
+      <div class="max-w-5xl mx-auto bg-white rounded-3xl shadow-xl border-2 border-sky-100 p-5 sm:p-7">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-5 no-print">
+          <div>
+            <h2 id="gridModalTitle" class="font-display text-2xl font-bold text-slate-900">
+              📋 1B Spelling Contest Wordlist — 48 單字總覽表
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
+              點擊任一單字卡可直接跳轉到該張 Flash Card 練習，或直接列印複習
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              id="printGridBtn"
+              type="button"
+              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold transition cursor-pointer"
+            >
+              <span>🖨️</span>
+              <span>列印單字表</span>
+            </button>
+            <button
+              id="closeGridBtn"
+              type="button"
+              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition cursor-pointer"
+            >
+              <span>✕ 關閉</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="gridModalContent" class="space-y-6">
+          <!-- Populated dynamically grouped by the 4 lessons -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * Complete 48-word dataset from Liam's "1B Spelling Contest Wordlist"
+     * Organized into:
+     * - Unit 7 Lesson 1 (12 words)
+     * - Unit 7 Lesson 2 (12 words)
+     * - Unit 7 Lesson 3 (12 words)
+     * - Unit 8 Lesson 1 (12 words)
+     */
+    const SPELLING_WORDS = [
+      // ================= UNIT 7 LESSON 1 (12 words) =================
+      {
+        id: 'u7l1-goat',
+        unit: 'Unit 7 Lesson 1',
+        word: 'goat',
+        meaning: '山羊',
+        shortHint: 'oa 發長母音 /oʊ/',
+        phonics: '字母組合 oa 通常在字中發長母音 /oʊ/（如 g-o-a-t），注意不要拼成 got。',
+        sentenceEn: 'A white goat eats green grass on the hill.',
+        sentenceZh: '一隻白山羊在山丘上吃綠草。',
+        theme: 'mint',
+        icon: 'goat'
+      },
+      {
+        id: 'u7l1-boat',
+        unit: 'Unit 7 Lesson 1',
+        word: 'boat',
+        meaning: '小船',
+        shortHint: 'oa 發長母音 /oʊ/',
+        phonics: 'b-o-a-t 含有 oa 長母音 /oʊ/，與 goat 押韻（rhymes with goat）。',
+        sentenceEn: 'We row the small boat across the calm lake.',
+        sentenceZh: '我們划著小船穿過平靜的湖面。',
+        theme: 'sky',
+        icon: 'boat'
+      },
+      {
+        id: 'u7l1-toad',
+        unit: 'Unit 7 Lesson 1',
+        word: 'toad',
+        meaning: '蟾蜍、癩蛤蟆',
+        shortHint: 'oa 發長母音 /oʊ/',
+        phonics: 't-o-a-d 使用 oa 發 /oʊ/ 音，字尾是 d（與 load 押韻）。',
+        sentenceEn: 'The little toad hops near the pond after rain.',
+        sentenceZh: '雨後小蟾蜍在池塘邊跳躍。',
+        theme: 'mint',
+        icon: 'toad'
+      },
+      {
+        id: 'u7l1-load',
+        unit: 'Unit 7 Lesson 1',
+        word: 'load',
+        meaning: '負荷、裝載的一批貨物',
+        shortHint: 'oa 發長母音 /oʊ/',
+        phonics: 'l-o-a-d 中 oa 發 /oʊ/，可指「一車/一批貨物」，也可當動詞「裝載」。',
+        sentenceEn: 'The truck carries a heavy load of boxes.',
+        sentenceZh: '卡車載著沉重的一批紙箱。',
+        theme: 'amber',
+        icon: 'load'
+      },
+      {
+        id: 'u7l1-loan',
+        unit: 'Unit 7 Lesson 1',
+        word: 'loan',
+        meaning: '借出、貸款',
+        shortHint: 'oa 發長母音 /oʊ/',
+        phonics: 'l-o-a-n 中 oa 發 /oʊ/，意思與借貸、暫借有關。',
+        sentenceEn: 'Liam got a book loan from the school library.',
+        sentenceZh: 'Liam 從學校圖書館借了一本書。',
+        theme: 'violet',
+        icon: 'loan'
+      },
+      {
+        id: 'u7l1-mow',
+        unit: 'Unit 7 Lesson 1',
+        word: 'mow',
+        meaning: '修剪草坪、割草',
+        shortHint: 'ow 在字尾常發 /oʊ/',
+        phonics: '字母組合 ow 在字尾常發長母音 /oʊ/（m-o-w），意思是割草。',
+        sentenceEn: 'Dad will mow the lawn on Saturday morning.',
+        sentenceZh: '爸爸星期六早上會修剪草坪。',
+        theme: 'mint',
+        icon: 'mow'
+      },
+      {
+        id: 'u7l1-tow',
+        unit: 'Unit 7 Lesson 1',
+        word: 'tow',
+        meaning: '拖、拖曳',
+        shortHint: 'ow 在字尾發 /oʊ/',
+        phonics: 't-o-w 的 ow 發 /oʊ/，意思是「用繩子或車子拖拉」。',
+        sentenceEn: 'The tow truck pulls the broken car away.',
+        sentenceZh: '拖吊車把故障的車子拖走。',
+        theme: 'amber',
+        icon: 'tow'
+      },
+      {
+        id: 'u7l1-crow',
+        unit: 'Unit 7 Lesson 1',
+        word: 'crow',
+        meaning: '烏鴉；（公雞）啼叫',
+        shortHint: 'cr 複輔音 + ow /oʊ/',
+        phonics: '開頭是 cr 輔音群，字尾 ow 發 /oʊ/（c-r-o-w）。',
+        sentenceEn: 'A black crow sits on the tall tree branch.',
+        sentenceZh: '一隻黑烏鴉停在高高的樹枝上。',
+        theme: 'violet',
+        icon: 'crow'
+      },
+      {
+        id: 'u7l1-glow',
+        unit: 'Unit 7 Lesson 1',
+        word: 'glow',
+        meaning: '發光、微光',
+        shortHint: 'gl 複輔音 + ow /oʊ/',
+        phonics: '開頭是 gl 輔音群，ow 發 /oʊ/（g-l-o-w），表示散發柔和光芒。',
+        sentenceEn: 'Fireflies glow softly in the dark garden.',
+        sentenceZh: '螢火蟲在漆黑的花園裡散發柔和微光。',
+        theme: 'amber',
+        icon: 'glow'
+      },
+      {
+        id: 'u7l1-show',
+        unit: 'Unit 7 Lesson 1',
+        word: 'show',
+        meaning: '展示、表演、給……看',
+        shortHint: 'sh 雙字母 + ow /oʊ/',
+        phonics: 'sh 發 /ʃ/ 音，ow 發 /oʊ/ 音（s-h-o-w）。',
+        sentenceEn: 'Please show me your spelling contest card.',
+        sentenceZh: '請給我看你的拼字比賽卡片。',
+        theme: 'coral',
+        icon: 'show'
+      },
+      {
+        id: 'u7l1-raincoat',
+        unit: 'Unit 7 Lesson 1',
+        word: 'raincoat',
+        meaning: '雨衣',
+        shortHint: '合成字 rain + coat',
+        phonics: '由 rain（雨）與 coat（外套）組成的合成字，中間的 coat 含有 oa 發 /oʊ/。',
+        sentenceEn: 'Put on your yellow raincoat before walking in the rain.',
+        sentenceZh: '在雨中走之前穿上你的黃色雨衣。',
+        theme: 'sky',
+        icon: 'raincoat'
+      },
+      {
+        id: 'u7l1-snowing',
+        unit: 'Unit 7 Lesson 1',
+        word: 'snowing',
+        meaning: '正在下雪',
+        shortHint: 'snow + -ing',
+        phonics: '由 snow（ow 發 /oʊ/）加上現在分詞字尾 -ing 組成（s-n-o-w-i-n-g）。',
+        sentenceEn: 'It is snowing outside, so let us build a snowman.',
+        sentenceZh: '外面正在下雪，我們來堆雪人吧。',
+        theme: 'sky',
+        icon: 'snowing'
+      },
+
+      // ================= UNIT 7 LESSON 2 (12 words) =================
+      {
+        id: 'u7l2-lamb',
+        unit: 'Unit 7 Lesson 2',
+        word: 'lamb',
+        meaning: '小羊、羔羊',
+        shortHint: '字尾 mb 的 b 不發音（Silent b）',
+        phonics: '字尾組合 mb 中，字母 b 是不發音的（silent b），發音為 /læm/。',
+        sentenceEn: 'The cute lamb follows its mother across the meadow.',
+        sentenceZh: '可愛的小羊跟著羊媽媽穿過草地。',
+        theme: 'mint',
+        icon: 'lamb'
+      },
+      {
+        id: 'u7l2-limb',
+        unit: 'Unit 7 Lesson 2',
+        word: 'limb',
+        meaning: '肢、手腳、大樹枝',
+        shortHint: '字尾 mb 的 b 不發音（Silent b）',
+        phonics: 'l-i-m-b 結尾的 b 不發音（silent b），發音為 /lɪm/。',
+        sentenceEn: 'A squirrel climbs up a thick tree limb.',
+        sentenceZh: '一隻松鼠爬上一條粗壯的大樹枝。',
+        theme: 'amber',
+        icon: 'limb'
+      },
+      {
+        id: 'u7l2-numb',
+        unit: 'Unit 7 Lesson 2',
+        word: 'numb',
+        meaning: '麻木的、凍僵的',
+        shortHint: '字尾 mb 的 b 不發音（Silent b）',
+        phonics: 'n-u-m-b 結尾的 b 不發音（silent b），發音為 /nʌm/。',
+        sentenceEn: 'My fingers felt numb in the cold winter wind.',
+        sentenceZh: '在寒冷的冬風中，我的手指覺得凍僵麻木了。',
+        theme: 'sky',
+        icon: 'numb'
+      },
+      {
+        id: 'u7l2-comb',
+        unit: 'Unit 7 Lesson 2',
+        word: 'comb',
+        meaning: '梳子、梳理',
+        shortHint: '字尾 mb 的 b 不發音（Silent b）',
+        phonics: 'c-o-m-b 結尾的 b 不發音（silent b），o 發長母音 /oʊ/，讀作 /koʊm/。',
+        sentenceEn: 'I use a comb to make my hair neat every morning.',
+        sentenceZh: '我每天早上用梳子把頭髮梳整齊。',
+        theme: 'violet',
+        icon: 'comb'
+      },
+      {
+        id: 'u7l2-thumb',
+        unit: 'Unit 7 Lesson 2',
+        word: 'thumb',
+        meaning: '大拇指',
+        shortHint: 'th 開頭 + 字尾 silent b',
+        phonics: '開頭 th 發有聲 /ð/ 或無聲 /θ/，字尾 mb 的 b 不發音，讀作 /θʌm/。',
+        sentenceEn: 'Liam gives a big thumbs-up for a great job.',
+        sentenceZh: 'Liam 豎起大拇指為好表現按讚。',
+        theme: 'coral',
+        icon: 'thumb'
+      },
+      {
+        id: 'u7l2-know',
+        unit: 'Unit 7 Lesson 2',
+        word: 'know',
+        meaning: '知道、認識',
+        shortHint: '字首 kn 的 k 不發音（Silent k）',
+        phonics: '字首組合 kn 中，k 是不發音的（silent k），只發 /n/ 音，字尾 ow 發 /oʊ/。',
+        sentenceEn: 'Do you know how to spell all forty-eight words?',
+        sentenceZh: '你知道怎麼拼出全部四十八個單字嗎？',
+        theme: 'sky',
+        icon: 'know'
+      },
+      {
+        id: 'u7l2-knob',
+        unit: 'Unit 7 Lesson 2',
+        word: 'knob',
+        meaning: '門把、旋鈕',
+        shortHint: '字首 kn 的 k 不發音（Silent k）',
+        phonics: 'k-n-o-b 開頭的 k 不發音（silent k），o 發短母音 /ɑ/，讀作 /nɑb/。',
+        sentenceEn: 'Turn the round brass knob to open the door.',
+        sentenceZh: '轉動圓形的黃銅門把來開門。',
+        theme: 'amber',
+        icon: 'knob'
+      },
+      {
+        id: 'u7l2-knee',
+        unit: 'Unit 7 Lesson 2',
+        word: 'knee',
+        meaning: '膝蓋',
+        shortHint: '字首 silent k + ee 發長 /iː/',
+        phonics: '開頭 kn 的 k 不發音，ee 發長母音 /iː/（k-n-e-e），讀作 /niː/。',
+        sentenceEn: 'He put a bandage on his scraped knee.',
+        sentenceZh: '他在擦傷的膝蓋上貼了OK繃。',
+        theme: 'coral',
+        icon: 'knee'
+      },
+      {
+        id: 'u7l2-gnat',
+        unit: 'Unit 7 Lesson 2',
+        word: 'gnat',
+        meaning: '小黑蚊、蚋',
+        shortHint: '字首 gn 的 g 不發音（Silent g）',
+        phonics: '字首組合 gn 中，g 是不發音的（silent g），只發 /n/ 音（g-n-a-t）。',
+        sentenceEn: 'A tiny gnat buzzed near the fruit bowl.',
+        sentenceZh: '一隻小小的黑蚊在水果盤附近嗡嗡飛。',
+        theme: 'mint',
+        icon: 'gnat'
+      },
+      {
+        id: 'u7l2-gnaw',
+        unit: 'Unit 7 Lesson 2',
+        word: 'gnaw',
+        meaning: '啃咬、咬噬',
+        shortHint: '字首 silent g + aw 發 /ɔː/',
+        phonics: '開頭 gn 的 g 不發音，aw 發 /ɔː/ 音（g-n-a-w），讀作 /nɔː/。',
+        sentenceEn: 'Beavers gnaw on tree trunks to build dams.',
+        sentenceZh: '海狸啃咬樹幹來建造水壩。',
+        theme: 'amber',
+        icon: 'gnaw'
+      },
+      {
+        id: 'u7l2-plumber',
+        unit: 'Unit 7 Lesson 2',
+        word: 'plumber',
+        meaning: '水電工、水管工',
+        shortHint: 'plumb + -er，b 不發音',
+        phonics: '由 plumb（b 不發音）加上表示職業的 -er 組成，讀作 /ˈplʌmər/。',
+        sentenceEn: 'The plumber fixed the leaking pipe under the sink.',
+        sentenceZh: '水管工修好了水槽下漏水的水管。',
+        theme: 'sky',
+        icon: 'plumber'
+      },
+      {
+        id: 'u7l2-knitting',
+        unit: 'Unit 7 Lesson 2',
+        word: 'knitting',
+        meaning: '編織、織毛衣',
+        shortHint: '字首 silent k + tt + -ing',
+        phonics: '開頭 kn 的 k 不發音，短母音 i 後面雙寫 t 再加 -ing（k-n-i-t-t-i-n-g）。',
+        sentenceEn: 'Grandma is knitting a warm scarf with yarn.',
+        sentenceZh: '奶奶正在用毛線織一條溫暖的圍巾。',
+        theme: 'violet',
+        icon: 'knitting'
+      },
+
+      // ================= UNIT 7 LESSON 3 (12 words) =================
+      {
+        id: 'u7l3-too',
+        unit: 'Unit 7 Lesson 3',
+        word: 'too',
+        meaning: '也、太……',
+        shortHint: 'oo 發長音 /uː/',
+        phonics: 't-o-o 中的 oo 發長音 /uː/，可表示「也」或程度「太……」。',
+        sentenceEn: 'I like spelling contest games too!',
+        sentenceZh: '我也喜歡拼字比賽遊戲！',
+        theme: 'sky',
+        icon: 'too'
+      },
+      {
+        id: 'u7l3-zoo',
+        unit: 'Unit 7 Lesson 3',
+        word: 'zoo',
+        meaning: '動物園',
+        shortHint: 'z + oo 發長音 /uː/',
+        phonics: 'z-o-o 中的 oo 發長音 /uː/，讀作 /zuː/。',
+        sentenceEn: 'We saw elephants and zebras at the zoo.',
+        sentenceZh: '我們在動物園看到大象和斑馬。',
+        theme: 'mint',
+        icon: 'zoo'
+      },
+      {
+        id: 'u7l3-tools',
+        unit: 'Unit 7 Lesson 3',
+        word: 'tools',
+        meaning: '工具',
+        shortHint: 'tool + -s，oo 發 /uː/',
+        phonics: 't-o-o-l-s 中 oo 發長音 /uː/，字尾加 s 表示複數「許多工具」。',
+        sentenceEn: 'Keep your hammer and screwdriver in the tools box.',
+        sentenceZh: '把你的榔頭和螺絲起子放在工具箱裡。',
+        theme: 'amber',
+        icon: 'tools'
+      },
+      {
+        id: 'u7l3-shoots',
+        unit: 'Unit 7 Lesson 3',
+        word: 'shoots',
+        meaning: '嫩芽、射擊/發芽',
+        shortHint: 'sh + oo + ts，oo 發 /uː/',
+        phonics: 's-h-o-o-t-s 中 oo 發 /uː/，可指植物冒出的「嫩芽」或「射出」。',
+        sentenceEn: 'Green shoots pop out of the soil in spring.',
+        sentenceZh: '春天綠色的嫩芽從土壤中冒出來。',
+        theme: 'mint',
+        icon: 'shoots'
+      },
+      {
+        id: 'u7l3-soon',
+        unit: 'Unit 7 Lesson 3',
+        word: 'soon',
+        meaning: '很快、不久',
+        shortHint: 's + oo + n，oo 發 /uː/',
+        phonics: 's-o-o-n 中 oo 發長音 /uː/，意思是「很快就會發生」。',
+        sentenceEn: 'Winter break will start very soon!',
+        sentenceZh: '寒假很快就要開始了！',
+        theme: 'violet',
+        icon: 'soon'
+      },
+      {
+        id: 'u7l3-hoop',
+        unit: 'Unit 7 Lesson 3',
+        word: 'hoop',
+        meaning: '籃框、呼拉圈、圓環',
+        shortHint: 'h + oo + p，oo 發 /uː/',
+        phonics: 'h-o-o-p 中 oo 發長音 /uː/，指圓圈、呼拉圈或籃框。',
+        sentenceEn: 'Liam jumped through the colorful hula hoop.',
+        sentenceZh: 'Liam 跳過彩色的呼拉圈。',
+        theme: 'coral',
+        icon: 'hoop'
+      },
+      {
+        id: 'u7l3-scoop',
+        unit: 'Unit 7 Lesson 3',
+        word: 'scoop',
+        meaning: '勺、一杓（冰淇淋等）',
+        shortHint: 'sc + oo + p，oo 發 /uː/',
+        phonics: 'sc 輔音群加上 oo 發 /uː/（s-c-o-o-p），常見於「一杓冰淇淋」。',
+        sentenceEn: 'May I have one scoop of chocolate ice cream?',
+        sentenceZh: '我可以要一杓巧克力冰淇淋嗎？',
+        theme: 'coral',
+        icon: 'scoop'
+      },
+      {
+        id: 'u7l3-loose',
+        unit: 'Unit 7 Lesson 3',
+        word: 'loose',
+        meaning: '鬆的、寬鬆的',
+        shortHint: 'oo 發 /uː/，字尾是 se',
+        phonics: 'l-o-o-s-e 中 oo 發 /uː/，注意是雙 o 加 se（與 lose「遺失」不同）。',
+        sentenceEn: 'My loose tooth wiggles when I eat an apple.',
+        sentenceZh: '我吃蘋果時，鬆動的牙齒會晃動。',
+        theme: 'sky',
+        icon: 'loose'
+      },
+      {
+        id: 'u7l3-moose',
+        unit: 'Unit 7 Lesson 3',
+        word: 'moose',
+        meaning: '駝鹿、麋鹿',
+        shortHint: 'm + oo + se，oo 發 /uː/',
+        phonics: 'm-o-o-s-e 中 oo 發長音 /uː/，單複數同形，指大型的鹿。',
+        sentenceEn: 'A big moose walked across the snowy forest.',
+        sentenceZh: '一隻大駝鹿走過覆雪的森林。',
+        theme: 'amber',
+        icon: 'moose'
+      },
+      {
+        id: 'u7l3-boots',
+        unit: 'Unit 7 Lesson 3',
+        word: 'boots',
+        meaning: '靴子',
+        shortHint: 'b + oo + ts，oo 發 /uː/',
+        phonics: 'b-o-o-t-s 中 oo 發 /uː/，通常成雙出現（雨靴、雪靴）。',
+        sentenceEn: 'Wear rain boots so your socks stay dry.',
+        sentenceZh: '穿上雨靴，這樣你的襪子才不會濕。',
+        theme: 'sky',
+        icon: 'boots'
+      },
+      {
+        id: 'u7l3-balloon',
+        unit: 'Unit 7 Lesson 3',
+        word: 'balloon',
+        meaning: '氣球',
+        shortHint: '雙寫 ll + oo 發 /uː/',
+        phonics: 'b-a-l-l-o-o-n 中間有雙寫 l，後半段 oon 發 /uːn/。',
+        sentenceEn: 'A red balloon floated high into the blue sky.',
+        sentenceZh: '一顆紅氣球飄向高高的藍天。',
+        theme: 'coral',
+        icon: 'balloon'
+      },
+      {
+        id: 'u7l3-scooter',
+        unit: 'Unit 7 Lesson 3',
+        word: 'scooter',
+        meaning: '滑板車、踏板車',
+        shortHint: 'sc + oo + ter，oo 發 /uː/',
+        phonics: 's-c-o-o-t-e-r 含有 oo 長音 /uː/，是小朋友很喜歡的代步玩具。',
+        sentenceEn: 'She rides her scooter to the park every afternoon.',
+        sentenceZh: '她每天下午騎滑板車去公園。',
+        theme: 'violet',
+        icon: 'scooter'
+      },
+
+      // ================= UNIT 8 LESSON 1 (12 words) =================
+      {
+        id: 'u8l1-new',
+        unit: 'Unit 8 Lesson 1',
+        word: 'new',
+        meaning: '新的',
+        shortHint: 'ew 在字尾發 /uː/',
+        phonics: '字母組合 ew 在字尾常發 /uː/ 或 /juː/（n-e-w），意思是「新的」。',
+        sentenceEn: 'Liam got a new pencil box for school.',
+        sentenceZh: 'Liam 得到了一個新的鉛筆盒去上學。',
+        theme: 'sky',
+        icon: 'new'
+      },
+      {
+        id: 'u8l1-drew',
+        unit: 'Unit 8 Lesson 1',
+        word: 'drew',
+        meaning: '畫了（draw 的過去式）',
+        shortHint: 'dr + ew 發 /uː/',
+        phonics: 'd-r-e-w 是 draw 的過去式，ew 發 /uː/ 音。',
+        sentenceEn: 'She drew a smiling sun on her paper.',
+        sentenceZh: '她在紙上畫了一個微笑的太陽。',
+        theme: 'amber',
+        icon: 'drew'
+      },
+      {
+        id: 'u8l1-stew',
+        unit: 'Unit 8 Lesson 1',
+        word: 'stew',
+        meaning: '燉菜、燉肉',
+        shortHint: 'st + ew 發 /uː/',
+        phonics: 's-t-e-w 開頭是 st 輔音群，ew 發 /uː/ 音，指慢火燉煮的食物。',
+        sentenceEn: 'Warm beef stew smells delicious on a chilly day.',
+        sentenceZh: '在微涼的日子裡，溫熱的燉牛肉聞起來很香。',
+        theme: 'coral',
+        icon: 'stew'
+      },
+      {
+        id: 'u8l1-blew',
+        unit: 'Unit 8 Lesson 1',
+        word: 'blew',
+        meaning: '吹了（blow 的過去式）',
+        shortHint: 'bl + ew 發 /uː/',
+        phonics: 'b-l-e-w 是 blow 的過去式，ew 發 /uː/ 音（與 blue 同音異字）。',
+        sentenceEn: 'The strong wind blew the leaves off the tree.',
+        sentenceZh: '強風把樹葉從樹上吹落了。',
+        theme: 'sky',
+        icon: 'blew'
+      },
+      {
+        id: 'u8l1-flew',
+        unit: 'Unit 8 Lesson 1',
+        word: 'flew',
+        meaning: '飛了（fly 的過去式）',
+        shortHint: 'fl + ew 發 /uː/',
+        phonics: 'f-l-e-w 是 fly 的過去式，ew 發 /uː/ 音。',
+        sentenceEn: 'The bird flew high over the green valley.',
+        sentenceZh: '小鳥飛越了翠綠的山谷上空。',
+        theme: 'mint',
+        icon: 'flew'
+      },
+      {
+        id: 'u8l1-rule',
+        unit: 'Unit 8 Lesson 1',
+        word: 'rule',
+        meaning: '規則、規定',
+        shortHint: 'u_e 魔法 e 發 /uː/',
+        phonics: '字尾不發音的 e 讓前面的 u 發長音 /uː/（r-u-l-e）。',
+        sentenceEn: 'Rule number one is to listen carefully in class.',
+        sentenceZh: '第一條規則是在課堂上專心聆聽。',
+        theme: 'violet',
+        icon: 'rule'
+      },
+      {
+        id: 'u8l1-tune',
+        unit: 'Unit 8 Lesson 1',
+        word: 'tune',
+        meaning: '曲調、旋律',
+        shortHint: 'u_e 魔法 e 發 /juː/ 或 /uː/',
+        phonics: 't-u-n-e 符合母音+子音+e（u_e）規則，指好聽的曲調。',
+        sentenceEn: 'He hummed a happy tune while walking home.',
+        sentenceZh: '他走回家的路上哼著歡快的曲調。',
+        theme: 'amber',
+        icon: 'tune'
+      },
+      {
+        id: 'u8l1-tube',
+        unit: 'Unit 8 Lesson 1',
+        word: 'tube',
+        meaning: '管子、軟管（如牙膏管）',
+        shortHint: 'u_e 魔法 e 發 /juː/ 或 /uː/',
+        phonics: 't-u-b-e 也是 u_e 拼字結構，可指圓管或牙膏軟管。',
+        sentenceEn: 'Squeeze a small amount from the toothpaste tube.',
+        sentenceZh: '從牙膏管裡擠出少量的牙膏。',
+        theme: 'sky',
+        icon: 'tube'
+      },
+      {
+        id: 'u8l1-rude',
+        unit: 'Unit 8 Lesson 1',
+        word: 'rude',
+        meaning: '粗魯的、沒禮貌的',
+        shortHint: 'r + u_e 發 /uː/',
+        phonics: 'r-u-d-e 中 u 遇到字尾魔法 e 發 /uː/，意思是沒有禮貌。',
+        sentenceEn: 'It is rude to interrupt when others are speaking.',
+        sentenceZh: '別人說話時插嘴是不禮貌的。',
+        theme: 'coral',
+        icon: 'rude'
+      },
+      {
+        id: 'u8l1-flute',
+        unit: 'Unit 8 Lesson 1',
+        word: 'flute',
+        meaning: '長笛、笛子',
+        shortHint: 'fl + u_e 發 /uː/',
+        phonics: 'f-l-u-t-e 開頭是 fl，u_e 發 /uː/ 音，是一種管樂器。',
+        sentenceEn: 'She plays a sweet melody on her silver flute.',
+        sentenceZh: '她用銀色長笛吹奏出甜美的旋律。',
+        theme: 'mint',
+        icon: 'flute'
+      },
+      {
+        id: 'u8l1-unscrew',
+        unit: 'Unit 8 Lesson 1',
+        word: 'unscrew',
+        meaning: '旋開、擰開（螺絲或瓶蓋）',
+        shortHint: '字首 un- + screw（ew 發 /uː/）',
+        phonics: '字首 un- 表示「相反/解開」，加上 screw（螺絲/旋緊，ew 發 /uː/）。',
+        sentenceEn: 'Unscrew the cap carefully to open the bottle.',
+        sentenceZh: '小心地把瓶蓋旋開。',
+        theme: 'amber',
+        icon: 'unscrew'
+      },
+      {
+        id: 'u8l1-costume',
+        unit: 'Unit 8 Lesson 1',
+        word: 'costume',
+        meaning: '服裝、戲服、裝扮服',
+        shortHint: 'cost + u_e 結構',
+        phonics: 'c-o-s-t-u-m-e 後半段含有 u_e 結構，指表演或節慶穿的服裝。',
+        sentenceEn: 'Everyone wore a fun costume for the party.',
+        sentenceZh: '每個人都穿著有趣的服裝參加派對。',
+        theme: 'violet',
+        icon: 'costume'
+      }
+    ];
+
+    const UNITS = [
+      'All Units',
+      'Unit 7 Lesson 1',
+      'Unit 7 Lesson 2',
+      'Unit 7 Lesson 3',
+      'Unit 8 Lesson 1'
+    ];
+
+    /**
+     * Generates crisp, vibrant vector SVG illustrations for each word.
+     * Every word has a dedicated visual scene/object for rich kid-friendly learning.
+     */
+    function renderWordSVG(iconKey) {
+      const svgs = {
+        goat: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <path d="M44 42 C38 26, 46 18, 52 26" stroke="#92400E" stroke-width="5" fill="none" stroke-linecap="round"/>
+            <path d="M74 42 C80 26, 72 18, 66 26" stroke="#92400E" stroke-width="5" fill="none" stroke-linecap="round"/>
+            <ellipse cx="72" cy="84" rx="34" ry="24" fill="#FFFFFF" stroke="#475569" stroke-width="3.5"/>
+            <circle cx="45" cy="54" r="18" fill="#FFFFFF" stroke="#475569" stroke-width="3.5"/>
+            <ellipse cx="29" cy="52" rx="9" ry="5" transform="rotate(-18 29 52)" fill="#FDE68A" stroke="#475569" stroke-width="2.5"/>
+            <circle cx="41" cy="52" r="2.8" fill="#1E293B"/>
+            <path d="M35 64 Q38 74 44 71" stroke="#475569" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <line x1="52" y1="106" x2="52" y2="124" stroke="#475569" stroke-width="4" stroke-linecap="round"/>
+            <line x1="65" y1="106" x2="65" y2="124" stroke="#475569" stroke-width="4" stroke-linecap="round"/>
+            <line x1="84" y1="106" x2="84" y2="124" stroke="#475569" stroke-width="4" stroke-linecap="round"/>
+            <line x1="96" y1="106" x2="96" y2="124" stroke="#475569" stroke-width="4" stroke-linecap="round"/>
+          </svg>`,
+        boat: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <line x1="70" y1="26" x2="70" y2="86" stroke="#475569" stroke-width="4"/>
+            <polygon points="72,30 106,78 72,78" fill="#FB7185" stroke="#334155" stroke-width="3" stroke-linejoin="round"/>
+            <polygon points="68,38 38,78 68,78" fill="#FACC15" stroke="#334155" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M24 86 H116 L102 106 H38 Z" fill="#F97316" stroke="#334155" stroke-width="3.5" stroke-linejoin="round"/>
+            <path d="M14 114 Q32 106 50 114 T86 114 T126 114" stroke="#0284C7" stroke-width="4" fill="none" stroke-linecap="round"/>
+          </svg>`,
+        toad: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <circle cx="52" cy="54" r="11" fill="#4ADE80" stroke="#166534" stroke-width="3"/>
+            <circle cx="86" cy="54" r="11" fill="#4ADE80" stroke="#166534" stroke-width="3"/>
+            <circle cx="52" cy="54" r="4.5" fill="#0F172A"/>
+            <circle cx="86" cy="54" r="4.5" fill="#0F172A"/>
+            <ellipse cx="70" cy="86" rx="42" ry="26" fill="#22C55E" stroke="#166534" stroke-width="3.5"/>
+            <circle cx="54" cy="82" r="4" fill="#15803D"/>
+            <circle cx="84" cy="86" r="5" fill="#15803D"/>
+            <circle cx="70" cy="96" r="3.5" fill="#15803D"/>
+            <path d="M46 74 Q70 84 94 74" stroke="#166534" stroke-width="3" fill="none" stroke-linecap="round"/>
+          </svg>`,
+        load: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <rect x="26" y="42" width="38" height="36" rx="5" fill="#FBBF24" stroke="#78350F" stroke-width="3"/>
+            <rect x="66" y="46" width="34" height="32" rx="5" fill="#F59E0B" stroke="#78350F" stroke-width="3"/>
+            <rect x="18" y="78" width="104" height="24" rx="6" fill="#38BDF8" stroke="#0F172A" stroke-width="3"/>
+            <circle cx="42" cy="106" r="11" fill="#334155" stroke="#0F172A" stroke-width="3"/>
+            <circle cx="42" cy="106" r="4" fill="#E2E8F0"/>
+            <circle cx="98" cy="106" r="11" fill="#334155" stroke="#0F172A" stroke-width="3"/>
+            <circle cx="98" cy="106" r="4" fill="#E2E8F0"/>
+          </svg>`,
+        loan: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <rect x="24" y="34" width="42" height="54" rx="6" fill="#A78BFA" stroke="#312E81" stroke-width="3"/>
+            <rect x="74" y="44" width="42" height="54" rx="6" fill="#34D399" stroke="#064E3B" stroke-width="3"/>
+            <path d="M52 62 H88 M80 54 L88 62 L80 70" stroke="#0F172A" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="45" cy="61" r="9" fill="#FEF08A" stroke="#312E81" stroke-width="2.5"/>
+          </svg>`,
+        mow: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <rect x="34" y="64" width="54" height="26" rx="8" fill="#EF4444" stroke="#450A0A" stroke-width="3"/>
+            <path d="M84 72 L106 32 L116 36" stroke="#334155" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="44" cy="94" r="11" fill="#1E293B"/>
+            <circle cx="80" cy="94" r="11" fill="#1E293B"/>
+            <path d="M14 108 H126" stroke="#22C55E" stroke-width="5" stroke-linecap="round"/>
+            <path d="M24 108 L20 98 M40 108 L38 100 M104 108 L108 99" stroke="#16A34A" stroke-width="3" stroke-linecap="round"/>
+          </svg>`,
+        tow: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <rect x="22" y="66" width="44" height="24" rx="5" fill="#FACC15" stroke="#422006" stroke-width="3"/>
+            <line x1="56" y1="66" x2="80" y2="38" stroke="#422006" stroke-width="4.5" stroke-linecap="round"/>
+            <line x1="80" y1="38" x2="96" y2="66" stroke="#64748B" stroke-width="3" stroke-dasharray="4 3"/>
+            <rect x="78" y="68" width="40" height="20" rx="6" fill="#60A5FA" stroke="#1E3A8A" stroke-width="3"/>
+            <circle cx="34" cy="94" r="9" fill="#1E293B"/>
+            <circle cx="56" cy="94" r="9" fill="#1E293B"/>
+            <circle cx="88" cy="92" r="8" fill="#1E293B"/>
+            <circle cx="108" cy="92" r="8" fill="#1E293B"/>
+          </svg>`,
+        crow: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <path d="M36 92 Q54 48 86 58 Q96 62 108 66 L90 74 Q84 96 54 98 Z" fill="#1E293B" stroke="#0F172A" stroke-width="3" stroke-linejoin="round"/>
+            <polygon points="106,63 122,67 106,72" fill="#F59E0B" stroke="#0F172A" stroke-width="2"/>
+            <circle cx="92" cy="63" r="3" fill="#FFFFFF"/>
+            <circle cx="92.5" cy="63" r="1.5" fill="#0F172A"/>
+            <path d="M58 98 L54 114 M70 98 L72 114" stroke="#475569" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M22 114 H116" stroke="#78350F" stroke-width="5" stroke-linecap="round"/>
+          </svg>`,
+        glow: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <circle cx="70" cy="64" r="26" fill="#FDE047" stroke="#CA8A04" stroke-width="3"/>
+            <path d="M70 22 V30 M70 98 V106 M28 64 H36 M104 64 H112 M40 34 L46 40 M94 88 L100 94 M100 34 L94 40 M46 88 L40 94" stroke="#F59E0B" stroke-width="3.5" stroke-linecap="round"/>
+            <rect x="60" y="90" width="20" height="10" rx="3" fill="#94A3B8" stroke="#334155" stroke-width="2.5"/>
+          </svg>`,
+        show: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <rect x="20" y="28" width="100" height="72" rx="10" fill="#FEF3C7" stroke="#92400E" stroke-width="3"/>
+            <path d="M20 28 L46 28 L32 100 L20 100 Z" fill="#FB7185" stroke="#92400E" stroke-width="2.5"/>
+            <path d="M120 28 L94 28 L108 100 L120 100 Z" fill="#FB7185" stroke="#92400E" stroke-width="2.5"/>
+            <polygon points="70,46 75,58 88,59 78,67 81,80 70,73 59,80 62,67 52,59 65,58" fill="#FACC15" stroke="#B45309" stroke-width="2.5"/>
+          </svg>`,
+        raincoat: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <path d="M54 28 Q70 16 86 28 L108 54 L94 66 L84 54 V114 H56 V54 L46 66 L32 54 Z" fill="#FACC15" stroke="#854D0E" stroke-width="3.5" stroke-linejoin="round"/>
+            <line x1="70" y1="36" x2="70" y2="114" stroke="#854D0E" stroke-width="2.5"/>
+            <circle cx="70" cy="64" r="3" fill="#854D0E"/>
+            <circle cx="70" cy="84" r="3" fill="#854D0E"/>
+          </svg>`,
+        snowing: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <path d="M38 64 H104 A20 20 0 0 0 102 24 A26 26 0 0 0 52 28 A18 18 0 0 0 38 64 Z" fill="#E0F2FE" stroke="#0284C7" stroke-width="3"/>
+            <circle cx="48" cy="82" r="4" fill="#38BDF8"/>
+            <circle cx="70" cy="92" r="4.5" fill="#38BDF8"/>
+            <circle cx="92" cy="80" r="4" fill="#38BDF8"/>
+            <circle cx="58" cy="108" r="3.5" fill="#38BDF8"/>
+            <circle cx="82" cy="106" r="3.5" fill="#38BDF8"/>
+          </svg>`,
+        lamb: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <circle cx="52" cy="74" r="16" fill="#FFFFFF" stroke="#475569" stroke-width="3"/>
+            <circle cx="70" cy="68" r="18" fill="#FFFFFF" stroke="#475569" stroke-width="3"/>
+            <circle cx="88" cy="74" r="16" fill="#FFFFFF" stroke="#475569" stroke-width="3"/>
+            <circle cx="70" cy="82" r="16" fill="#FFFFFF" stroke="#475569" stroke-width="3"/>
+            <circle cx="42" cy="56" r="14" fill="#FDE68A" stroke="#475569" stroke-width="3"/>
+            <circle cx="38" cy="54" r="2.5" fill="#0F172A"/>
+            <line x1="56" y1="96" x2="56" y2="116" stroke="#475569" stroke-width="3.5" stroke-linecap="round"/>
+            <line x1="84" y1="96" x2="84" y2="116" stroke="#475569" stroke-width="3.5" stroke-linecap="round"/>
+          </svg>`,
+        limb: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <path d="M22 86 Q68 82 118 58" stroke="#92400E" stroke-width="14" stroke-linecap="round" fill="none"/>
+            <path d="M68 76 L88 44" stroke="#92400E" stroke-width="9" stroke-linecap="round"/>
+            <ellipse cx="94" cy="36" rx="14" ry="8" transform="rotate(-35 94 36)" fill="#4ADE80" stroke="#166534" stroke-width="2.5"/>
+            <ellipse cx="114" cy="52" rx="14" ry="8" transform="rotate(-15 114 52)" fill="#4ADE80" stroke="#166534" stroke-width="2.5"/>
+          </svg>`,
+        numb: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <path d="M52 112 V54 Q52 44 60 44 Q66 44 66 54 V72 M66 50 Q66 40 74 40 Q80 40 80 50 V72 M80 56 Q80 46 88 46 Q94 46 94 56 V84 Q94 102 78 112 Z" fill="#BAE6FD" stroke="#0369A1" stroke-width="3.5" stroke-linejoin="round"/>
+            <path d="M36 44 L44 50 M104 42 L96 48 M34 72 H42" stroke="#0284C7" stroke-width="3" stroke-linecap="round"/>
+          </svg>`,
+        comb: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <rect x="24" y="42" width="92" height="20" rx="8" fill="#F472B6" stroke="#831843" stroke-width="3"/>
+            <line x1="34" y1="62" x2="34" y2="98" stroke="#831843" stroke-width="3.5" stroke-linecap="round"/>
+            <line x1="46" y1="62" x2="46" y2="98" stroke="#831843" stroke-width="3.5" stroke-linecap="round"/>
+            <line x1="58" y1="62" x2="58" y2="98" stroke="#831843" stroke-width="3.5" stroke-linecap="round"/>
+            <line x1="70" y1="62" x2="70" y2="98" stroke="#831843" stroke-width="3.5" stroke-linecap="round"/>
+            <line x1="82" y1="62" x2="82" y2="98" stroke="#831843" stroke-width="3.5" stroke-linecap="round"/>
+            <line x1="94" y1="62" x2="94" y2="98" stroke="#831843" stroke-width="3.5" stroke-linecap="round"/>
+            <line x1="106" y1="62" x2="106" y2="98" stroke="#831843" stroke-width="3.5" stroke-linecap="round"/>
+          </svg>`,
+        thumb: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <path d="M58 64 L72 34 Q78 24 84 30 Q88 36 82 52 L78 64 H102 Q110 64 110 72 Q110 78 104 80 Q108 86 102 92 Q104 98 96 102 H58 Z" fill="#FDE68A" stroke="#78350F" stroke-width="3.5" stroke-linejoin="round"/>
+            <rect x="34" y="60" width="24" height="46" rx="6" fill="#60A5FA" stroke="#1E3A8A" stroke-width="3"/>
+          </svg>`,
+        know: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <circle cx="70" cy="62" r="32" fill="#FEF08A" stroke="#B45309" stroke-width="3"/>
+            <path d="M62 52 Q70 42 78 52 Q82 58 74 64 L70 70" stroke="#92400E" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+            <circle cx="70" cy="80" r="3.5" fill="#92400E"/>
+            <text x="70" y="122" text-anchor="middle" font-size="14" font-weight="bold" fill="#475569">(k)now</text>
+          </svg>`,
+        knob: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <rect x="82" y="22" width="32" height="96" rx="6" fill="#FDE68A" stroke="#78350F" stroke-width="3"/>
+            <circle cx="56" cy="70" r="18" fill="#F59E0B" stroke="#78350F" stroke-width="3.5"/>
+            <circle cx="52" cy="65" r="5" fill="#FEF3C7"/>
+          </svg>`,
+        knee: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <path d="M52 24 H84 L88 66 L108 112 H76 L62 76 L48 64 Z" fill="#FDE68A" stroke="#78350F" stroke-width="3.5" stroke-linejoin="round"/>
+            <circle cx="64" cy="68" r="7" fill="#FCA5A5" stroke="#B91C1C" stroke-width="2"/>
+          </svg>`,
+        gnat: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <ellipse cx="64" cy="44" rx="18" ry="10" transform="rotate(-25 64 44)" fill="#E0F2FE" stroke="#0284C7" stroke-width="2.5"/>
+            <ellipse cx="82" cy="46" rx="18" ry="10" transform="rotate(20 82 46)" fill="#E0F2FE" stroke="#0284C7" stroke-width="2.5"/>
+            <ellipse cx="70" cy="72" rx="16" ry="10" fill="#334155"/>
+            <circle cx="52" cy="70" r="8" fill="#1E293B"/>
+            <line x1="44" y1="70" x2="26" y2="76" stroke="#1E293B" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M62 82 L54 100 M72 82 L72 102 M80 82 L90 100" stroke="#334155" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>`,
+        gnaw: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <rect x="26" y="54" width="66" height="32" rx="8" fill="#D97706" stroke="#451A03" stroke-width="3"/>
+            <polygon points="92,54 114,70 92,86" fill="#FDE68A" stroke="#451A03" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M98 63 L106 70 L98 77" stroke="#EF4444" stroke-width="3" fill="none" stroke-linecap="round"/>
+          </svg>`,
+        plumber: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <path d="M24 96 H72 V54 H116" stroke="#94A3B8" stroke-width="14" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M24 96 H72 V54 H116" stroke="#475569" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="72" cy="74" r="14" fill="#FACC15" stroke="#854D0E" stroke-width="3"/>
+          </svg>`,
+        knitting: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <circle cx="70" cy="76" r="28" fill="#F472B6" stroke="#831843" stroke-width="3"/>
+            <path d="M44 66 Q70 84 96 66 M48 88 Q70 68 92 88" stroke="#FBCFE8" stroke-width="3" fill="none"/>
+            <line x1="30" y1="34" x2="104" y2="96" stroke="#64748B" stroke-width="4" stroke-linecap="round"/>
+            <line x1="110" y1="34" x2="36" y2="96" stroke="#64748B" stroke-width="4" stroke-linecap="round"/>
+          </svg>`,
+        too: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <circle cx="52" cy="70" r="22" fill="#38BDF8" stroke="#0369A1" stroke-width="3"/>
+            <circle cx="88" cy="70" r="22" fill="#FACC15" stroke="#A16207" stroke-width="3"/>
+            <circle cx="46" cy="66" r="3" fill="#0F172A"/>
+            <circle cx="58" cy="66" r="3" fill="#0F172A"/>
+            <path d="M46 76 Q52 82 58 76" stroke="#0F172A" stroke-width="2.5" fill="none"/>
+            <circle cx="82" cy="66" r="3" fill="#0F172A"/>
+            <circle cx="94" cy="66" r="3" fill="#0F172A"/>
+            <path d="M82 76 Q88 82 94 76" stroke="#0F172A" stroke-width="2.5" fill="none"/>
+          </svg>`,
+        zoo: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <path d="M24 104 V48 Q70 18 116 48 V104" stroke="#16A34A" stroke-width="5" fill="none" stroke-linejoin="round"/>
+            <line x1="44" y1="42" x2="44" y2="104" stroke="#475569" stroke-width="3.5"/>
+            <line x1="70" y1="34" x2="70" y2="104" stroke="#475569" stroke-width="3.5"/>
+            <line x1="96" y1="42" x2="96" y2="104" stroke="#475569" stroke-width="3.5"/>
+            <circle cx="57" cy="78" r="12" fill="#FBBF24" stroke="#78350F" stroke-width="2.5"/>
+            <circle cx="83" cy="80" r="10" fill="#FB7185" stroke="#881337" stroke-width="2.5"/>
+          </svg>`,
+        tools: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <path d="M36 42 H74 V56 H60 V106 H48 V56 H36 Z" fill="#F97316" stroke="#431407" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M92 38 A16 16 0 1 0 104 62 L88 106 H78 L94 60 A16 16 0 0 0 92 38 Z" fill="#94A3B8" stroke="#1E293B" stroke-width="3"/>
+          </svg>`,
+        shoots: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <path d="M18 106 Q70 96 122 106 V120 H18 Z" fill="#A16207"/>
+            <path d="M70 102 V46" stroke="#15803D" stroke-width="5" stroke-linecap="round"/>
+            <ellipse cx="52" cy="54" rx="16" ry="9" transform="rotate(-25 52 54)" fill="#4ADE80" stroke="#166534" stroke-width="2.5"/>
+            <ellipse cx="88" cy="44" rx="16" ry="9" transform="rotate(25 88 44)" fill="#4ADE80" stroke="#166534" stroke-width="2.5"/>
+          </svg>`,
+        soon: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <circle cx="70" cy="72" r="36" fill="#FFFFFF" stroke="#6366F1" stroke-width="4"/>
+            <line x1="70" y1="72" x2="70" y2="48" stroke="#1E293B" stroke-width="4" stroke-linecap="round"/>
+            <line x1="70" y1="72" x2="90" y2="72" stroke="#EF4444" stroke-width="3.5" stroke-linecap="round"/>
+            <circle cx="70" cy="72" r="4" fill="#1E293B"/>
+          </svg>`,
+        hoop: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <ellipse cx="70" cy="70" rx="36" ry="42" fill="none" stroke="#FB7185" stroke-width="9"/>
+            <ellipse cx="70" cy="70" rx="36" ry="42" fill="none" stroke="#881337" stroke-width="2"/>
+            <circle cx="70" cy="70" r="10" fill="#F97316" stroke="#431407" stroke-width="2.5"/>
+          </svg>`,
+        scoop: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <polygon points="46,66 94,66 70,118" fill="#FBBF24" stroke="#78350F" stroke-width="3" stroke-linejoin="round"/>
+            <circle cx="70" cy="52" r="24" fill="#F9A8D4" stroke="#831843" stroke-width="3"/>
+            <circle cx="62" cy="46" r="4" fill="#FFFFFF" opacity="0.7"/>
+          </svg>`,
+        loose: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <rect x="44" y="34" width="52" height="58" rx="10" transform="rotate(-12 70 63)" fill="#FFFFFF" stroke="#334155" stroke-width="3.5"/>
+            <path d="M40 104 L46 96 L52 104" stroke="#0284C7" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <path d="M88 104 L94 96 L100 104" stroke="#0284C7" stroke-width="3" fill="none" stroke-linecap="round"/>
+          </svg>`,
+        moose: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <path d="M46 46 L26 24 L36 38 L22 42 L44 50" stroke="#92400E" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M94 46 L114 24 L104 38 L118 42 L96 50" stroke="#92400E" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="46" y="46" width="48" height="54" rx="18" fill="#B45309" stroke="#451A03" stroke-width="3"/>
+            <circle cx="60" cy="66" r="3" fill="#0F172A"/>
+            <circle cx="80" cy="66" r="3" fill="#0F172A"/>
+            <ellipse cx="70" cy="84" rx="16" ry="11" fill="#D97706" stroke="#451A03" stroke-width="2.5"/>
+          </svg>`,
+        boots: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <path d="M36 34 H62 V84 H84 V104 H36 Z" fill="#38BDF8" stroke="#0C4A6E" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M74 44 H100 V88 H120 V106 H74 Z" fill="#60A5FA" stroke="#1E3A8A" stroke-width="3" stroke-linejoin="round"/>
+          </svg>`,
+        balloon: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <ellipse cx="70" cy="54" rx="28" ry="34" fill="#FB7185" stroke="#881337" stroke-width="3"/>
+            <polygon points="65,88 75,88 70,95" fill="#FB7185" stroke="#881337" stroke-width="2.5"/>
+            <path d="M70 95 Q62 108 72 120" stroke="#475569" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          </svg>`,
+        scooter: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <circle cx="36" cy="100" r="11" fill="#334155" stroke="#0F172A" stroke-width="2.5"/>
+            <circle cx="104" cy="100" r="11" fill="#334155" stroke="#0F172A" stroke-width="2.5"/>
+            <path d="M36 96 H94 L104 34 H88" stroke="#A855F7" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>`,
+        new: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <polygon points="70,22 82,48 110,52 90,71 95,99 70,85 45,99 50,71 30,52 58,48" fill="#FACC15" stroke="#A16207" stroke-width="3" stroke-linejoin="round"/>
+            <text x="70" y="66" text-anchor="middle" font-size="13" font-weight="bold" fill="#78350F">NEW</text>
+          </svg>`,
+        drew: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <path d="M24 104 L92 36 L108 52 L40 120 L20 120 Z" fill="#FBBF24" stroke="#78350F" stroke-width="3" stroke-linejoin="round"/>
+            <polygon points="92,36 104,24 120,40 108,52" fill="#F472B6" stroke="#831843" stroke-width="3" stroke-linejoin="round"/>
+          </svg>`,
+        stew: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <path d="M54 34 Q48 24 56 18 M72 34 Q66 24 74 18 M90 34 Q84 24 92 18" stroke="#94A3B8" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <path d="M26 56 H114 V84 A26 26 0 0 1 88 110 H52 A26 26 0 0 1 26 84 Z" fill="#F97316" stroke="#431407" stroke-width="3.5"/>
+            <circle cx="56" cy="70" r="6" fill="#4ADE80"/>
+            <circle cx="78" cy="74" r="7" fill="#FDE047"/>
+          </svg>`,
+        blew: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <path d="M22 58 H78 A16 16 0 1 0 64 34" stroke="#38BDF8" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+            <path d="M22 76 H96 A14 14 0 1 1 84 98" stroke="#60A5FA" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+            <ellipse cx="110" cy="52" rx="10" ry="5" transform="rotate(25 110 52)" fill="#4ADE80"/>
+          </svg>`,
+        flew: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <path d="M28 74 Q54 44 74 68 Q94 44 116 66 Q94 74 74 82 Q52 86 28 74 Z" fill="#38BDF8" stroke="#0369A1" stroke-width="3" stroke-linejoin="round"/>
+            <polygon points="116,66 126,69 116,72" fill="#FACC15" stroke="#0369A1" stroke-width="2"/>
+          </svg>`,
+        rule: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <rect x="22" y="52" width="96" height="36" rx="6" fill="#FDE047" stroke="#854D0E" stroke-width="3"/>
+            <line x1="38" y1="52" x2="38" y2="66" stroke="#854D0E" stroke-width="2.5"/>
+            <line x1="54" y1="52" x2="54" y2="62" stroke="#854D0E" stroke-width="2.5"/>
+            <line x1="70" y1="52" x2="70" y2="66" stroke="#854D0E" stroke-width="2.5"/>
+            <line x1="86" y1="52" x2="86" y2="62" stroke="#854D0E" stroke-width="2.5"/>
+            <line x1="102" y1="52" x2="102" y2="66" stroke="#854D0E" stroke-width="2.5"/>
+          </svg>`,
+        tune: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <circle cx="46" cy="96" r="12" fill="#A78BFA" stroke="#312E81" stroke-width="3"/>
+            <circle cx="92" cy="86" r="12" fill="#A78BFA" stroke="#312E81" stroke-width="3"/>
+            <path d="M58 96 V42 L104 32 V86" stroke="#312E81" stroke-width="4" fill="none" stroke-linejoin="round"/>
+          </svg>`,
+        tube: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <rect x="24" y="54" width="74" height="32" rx="4" fill="#34D399" stroke="#064E3B" stroke-width="3"/>
+            <polygon points="98,58 112,64 112,76 98,82" fill="#A7F3D0" stroke="#064E3B" stroke-width="2.5"/>
+            <rect x="112" y="63" width="10" height="14" rx="2" fill="#F87171" stroke="#7F1D1D" stroke-width="2"/>
+          </svg>`,
+        rude: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <circle cx="70" cy="70" r="36" fill="#FECACA" stroke="#991B1B" stroke-width="3.5"/>
+            <line x1="50" y1="54" x2="62" y2="60" stroke="#991B1B" stroke-width="3.5" stroke-linecap="round"/>
+            <line x1="90" y1="54" x2="78" y2="60" stroke="#991B1B" stroke-width="3.5" stroke-linecap="round"/>
+            <circle cx="56" cy="64" r="3" fill="#991B1B"/>
+            <circle cx="84" cy="64" r="3" fill="#991B1B"/>
+            <path d="M52 88 Q70 76 88 88" stroke="#991B1B" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+          </svg>`,
+        flute: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <rect x="18" y="64" width="104" height="12" rx="6" transform="rotate(-18 70 70)" fill="#CBD5E1" stroke="#334155" stroke-width="3"/>
+            <circle cx="56" cy="74" r="2.5" fill="#334155"/>
+            <circle cx="68" cy="70" r="2.5" fill="#334155"/>
+            <circle cx="80" cy="66" r="2.5" fill="#334155"/>
+            <circle cx="92" cy="62" r="2.5" fill="#334155"/>
+          </svg>`,
+        unscrew: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <rect x="48" y="24" width="44" height="16" rx="4" fill="#94A3B8" stroke="#1E293B" stroke-width="3"/>
+            <line x1="70" y1="40" x2="70" y2="108" stroke="#64748B" stroke-width="10" stroke-linecap="round"/>
+            <path d="M62 56 L78 52 M62 72 L78 68 M62 88 L78 84" stroke="#1E293B" stroke-width="3" stroke-linecap="round"/>
+            <path d="M92 64 A16 16 0 1 1 82 50" stroke="#F59E0B" stroke-width="3" fill="none" stroke-linecap="round"/>
+          </svg>`,
+        costume: `
+          <svg viewBox="0 0 140 140" class="w-full h-full">
+            <polygon points="70,18 76,34 94,34 80,44 85,60 70,50 55,60 60,44 46,34 64,34" fill="#FACC15" stroke="#854D0E" stroke-width="2.5"/>
+            <path d="M44 64 H96 L106 116 H34 Z" fill="#C084FC" stroke="#4C1D95" stroke-width="3" stroke-linejoin="round"/>
+            <circle cx="70" cy="88" r="10" fill="#FEF08A" stroke="#4C1D95" stroke-width="2.5"/>
+          </svg>`
+      };
+
+      return svgs[iconKey] || svgs.goat;
+    }
+
+    // ================= APPLICATION STATE =================
+    const STORAGE_KEY = 'liam_1b_spelling_progress_v1';
+
+    let state = {
+      selectedUnit: 'All Units',
+      isShuffled: false,
+      currentIndex: 0,
+      isFlipped: false,
+      deck: [...SPELLING_WORDS],
+      // progressMap[wordId] = 'got_it' | 'practice'
+      progressMap: {}
+    };
+
+    // Load saved progress safely
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          state.progressMap = parsed;
+        }
+      }
+    } catch (err) {
+      console.warn('Unable to read localStorage progress:', err);
+    }
+
+    function saveProgress() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.progressMap));
+      } catch (err) {
+        console.warn('Unable to save localStorage progress:', err);
+      }
+    }
+
+    // ================= DECK & SHUFFLE LOGIC =================
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function rebuildDeck(keepCurrentWord = true) {
+      const previousWordId = keepCurrentWord && state.deck[state.currentIndex]
+        ? state.deck[state.currentIndex].id
+        : null;
+
+      let filtered = state.selectedUnit === 'All Units'
+        ? [...SPELLING_WORDS]
+        : SPELLING_WORDS.filter((item) => item.unit === state.selectedUnit);
+
+      if (state.isShuffled) {
+        filtered = shuffleArray(filtered);
+      }
+
+      state.deck = filtered;
+      state.isFlipped = false;
+
+      if (previousWordId) {
+        const foundIdx = state.deck.findIndex((item) => item.id === previousWordId);
+        state.currentIndex = foundIdx >= 0 ? foundIdx : 0;
+      } else {
+        state.currentIndex = 0;
+      }
+    }
+
+    // ================= WEB SPEECH API (en-US) =================
+    let toastTimer = null;
+    function showToast(msg) {
+      const toast = document.getElementById('statusToast');
+      if (!toast) return;
+      toast.textContent = msg;
+      toast.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 2600);
+    }
+
+    function speakEnglish(text, rate = 0.92) {
+      try {
+        if (!('speechSynthesis' in window)) {
+          showToast('此瀏覽器不支援語音朗讀，請參考拼字提示練習。');
+          return;
+        }
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = rate;
+
+        const voices = window.speechSynthesis.getVoices();
+        const usVoice = voices.find((v) => v.lang && v.lang.toLowerCase().startsWith('en-us'))
+          || voices.find((v) => v.lang && v.lang.toLowerCase().startsWith('en'));
+        if (usVoice) {
+          utterance.voice = usVoice;
+        }
+
+        window.speechSynthesis.speak(utterance);
+      } catch (err) {
+        console.error('Speech synthesis error:', err);
+        showToast('語音播放發生錯誤，請稍後再試。');
+      }
+    }
+
+    // Ensure voices load on browsers that populate asynchronously
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.getVoices();
+      };
+    }
+
+    // ================= RENDER FUNCTIONS =================
+    function renderUnitTabs() {
+      const tabsContainer = document.getElementById('unitTabs');
+      tabsContainer.innerHTML = '';
+
+      UNITS.forEach((unitName) => {
+        const isActive = state.selectedUnit === unitName;
+        const count = unitName === 'All Units'
+          ? SPELLING_WORDS.length
+          : SPELLING_WORDS.filter((w) => w.unit === unitName).length;
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = isActive
+          ? 'px-3.5 py-2 rounded-2xl bg-sky-500 text-white font-bold text-xs sm:text-sm shadow-xs transition cursor-pointer'
+          : 'px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs sm:text-sm transition cursor-pointer';
+        btn.textContent = unitName === 'All Units'
+          ? `全部單元 (${count})`
+          : `${unitName} (${count})`;
+
+        btn.addEventListener('click', () => {
+          state.selectedUnit = unitName;
+          rebuildDeck(false);
+          renderAll();
+        });
+
+        tabsContainer.appendChild(btn);
+      });
+    }
+
+    function renderProgressBar() {
+      const totalInDeck = state.deck.length;
+      const currentNum = totalInDeck > 0 ? state.currentIndex + 1 : 0;
+
+      document.getElementById('progressCounter').textContent = `第 ${currentNum} / ${totalInDeck} 張`;
+      document.getElementById('activeUnitBadge').textContent = state.selectedUnit === 'All Units'
+        ? '全部單元 (All Units)'
+        : state.selectedUnit;
+
+      const pct = totalInDeck > 0 ? (currentNum / totalInDeck) * 100 : 0;
+      document.getElementById('progressBarFill').style.width = `${pct}%`;
+
+      let gotIt = 0;
+      let practice = 0;
+      SPELLING_WORDS.forEach((w) => {
+        const status = state.progressMap[w.id];
+        if (status === 'got_it') gotIt++;
+        else if (status === 'practice') practice++;
+      });
+
+      document.getElementById('masteredCount').textContent = gotIt;
+      document.getElementById('practiceCount').textContent = practice;
+    }
+
+    function renderFlashCard() {
+      const card = state.deck[state.currentIndex];
+      if (!card) return;
+
+      const inner = document.getElementById('flashcardInner');
+      if (state.isFlipped) {
+        inner.classList.add('is-flipped');
+      } else {
+        inner.classList.remove('is-flipped');
+      }
+
+      // Front elements
+      document.getElementById('frontUnitTag').textContent = card.unit;
+      document.getElementById('frontWord').textContent = card.word;
+      document.getElementById('frontPhoneticHint').textContent = `Phonics: ${card.shortHint}`;
+      document.getElementById('illustrationBox').innerHTML = renderWordSVG(card.icon);
+
+      // Status badge
+      const statusBadge = document.getElementById('frontStatusBadge');
+      const status = state.progressMap[card.id];
+      if (status === 'got_it') {
+        statusBadge.textContent = '✅ 已學會 (Got it)';
+        statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800';
+      } else if (status === 'practice') {
+        statusBadge.textContent = '🔁 需加強 (Need practice)';
+        statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800';
+      } else {
+        statusBadge.textContent = '尚未標記';
+        statusBadge.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500';
+      }
+
+      // Back elements
+      document.getElementById('backWord').textContent = card.word;
+      document.getElementById('backMeaning').textContent = card.meaning;
+      document.getElementById('backPhonics').textContent = card.phonics;
+      document.getElementById('backSentenceEn').textContent = card.sentenceEn;
+      document.getElementById('backSentenceZh').textContent = card.sentenceZh;
+
+      // Update shuffle button appearance
+      const shuffleLabel = document.getElementById('shuffleLabel');
+      const shuffleBtn = document.getElementById('shuffleBtn');
+      if (state.isShuffled) {
+        shuffleLabel.textContent = '隨機順序：開';
+        shuffleBtn.className = 'inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl border-2 border-violet-500 bg-violet-600 text-white font-semibold text-sm shadow-xs transition cursor-pointer';
+      } else {
+        shuffleLabel.textContent = '隨機順序：關';
+        shuffleBtn.className = 'inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl border-2 border-violet-200 bg-violet-50 hover:bg-violet-100 active:scale-95 text-violet-800 font-semibold text-sm transition cursor-pointer';
+      }
+    }
+
+    function renderGridModal() {
+      const container = document.getElementById('gridModalContent');
+      container.innerHTML = '';
+
+      const lessonsOnly = UNITS.filter((u) => u !== 'All Units');
+
+      lessonsOnly.forEach((unitName) => {
+        const words = SPELLING_WORDS.filter((w) => w.unit === unitName);
+        const section = document.createElement('div');
+
+        const heading = document.createElement('h3');
+        heading.className = 'font-display text-lg font-bold text-slate-800 mb-3 flex items-center gap-2';
+        heading.innerHTML = `<span class="px-2.5 py-0.5 rounded-lg bg-sky-100 text-sky-800 text-sm">${unitName}</span><span>(${words.length} 詞)</span>`;
+        section.appendChild(heading);
+
+        const grid = document.createElement('div');
+        grid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3';
+
+        words.forEach((item) => {
+          const status = state.progressMap[item.id];
+          const statusMark = status === 'got_it' ? '✅' : status === 'practice' ? '🔁' : '';
+
+          const tile = document.createElement('button');
+          tile.type = 'button';
+          tile.className = 'text-left p-3 rounded-2xl border border-slate-200 hover:border-sky-400 hover:bg-sky-50/50 transition flex items-center gap-3 cursor-pointer bg-white';
+          tile.innerHTML = `
+            <div class="w-11 h-11 shrink-0 rounded-xl bg-slate-50 border border-slate-100 p-1 flex items-center justify-center">
+              ${renderWordSVG(item.icon)}
+            </div>
+            <div class="min-w-0">
+              <div class="font-display font-bold text-base text-slate-900 truncate flex items-center gap-1">
+                <span>${item.word}</span>
+                <span class="text-xs">${statusMark}</span>
+              </div>
+              <div class="text-xs text-slate-600 truncate">${item.meaning}</div>
+            </div>
+          `;
+
+          tile.addEventListener('click', () => {
+            closeGridModal();
+            state.selectedUnit = 'All Units';
+            state.isShuffled = false;
+            rebuildDeck(false);
+            const targetIdx = state.deck.findIndex((w) => w.id === item.id);
+            state.currentIndex = targetIdx >= 0 ? targetIdx : 0;
+            state.isFlipped = false;
+            renderAll();
+          });
+
+          grid.appendChild(tile);
+        });
+
+        section.appendChild(grid);
+        container.appendChild(section);
+      });
+    }
+
+    function renderAll() {
+      renderUnitTabs();
+      renderProgressBar();
+      renderFlashCard();
+    }
+
+    // ================= NAVIGATION & INTERACTIONS =================
+    function toggleFlip() {
+      state.isFlipped = !state.isFlipped;
+      renderFlashCard();
+    }
+
+    function nextCard() {
+      if (state.deck.length === 0) return;
+      state.isFlipped = false;
+      state.currentIndex = (state.currentIndex + 1) % state.deck.length;
+      renderAll();
+    }
+
+    function prevCard() {
+      if (state.deck.length === 0) return;
+      state.isFlipped = false;
+      state.currentIndex = (state.currentIndex - 1 + state.deck.length) % state.deck.length;
+      renderAll();
+    }
+
+    function markCurrentCard(status) {
+      const card = state.deck[state.currentIndex];
+      if (!card) return;
+      state.progressMap[card.id] = status;
+      saveProgress();
+      renderProgressBar();
+      renderFlashCard();
+      showToast(
+        status === 'got_it'
+          ? `已將 "${card.word}" 標記為已學會 (Got it)！`
+          : `已將 "${card.word}" 加入需加強練習 (Need practice)。`
+      );
+    }
+
+    function openGridModal() {
+      renderGridModal();
+      document.getElementById('gridModal').classList.remove('hidden');
+    }
+
+    function closeGridModal() {
+      document.getElementById('gridModal').classList.add('hidden');
+    }
+
+    // Bind DOM Events
+    document.getElementById('flashcardInner').addEventListener('click', (e) => {
+      // Avoid flipping when clicking inner buttons
+      if (e.target.closest('button')) return;
+      toggleFlip();
+    });
+
+    document.getElementById('flashcardInner').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleFlip();
+      }
+    });
+
+    document.getElementById('flipToBackBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      state.isFlipped = true;
+      renderFlashCard();
+    });
+
+    document.getElementById('flipToFrontBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      state.isFlipped = false;
+      renderFlashCard();
+    });
+
+    document.getElementById('speakFrontBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const card = state.deck[state.currentIndex];
+      if (card) speakEnglish(card.word, 0.9);
+    });
+
+    document.getElementById('speakBackWordBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const card = state.deck[state.currentIndex];
+      if (card) speakEnglish(card.word, 0.9);
+    });
+
+    document.getElementById('speakSentenceBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const card = state.deck[state.currentIndex];
+      if (card) speakEnglish(card.sentenceEn, 0.92);
+    });
+
+    document.getElementById('markGotItBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      markCurrentCard('got_it');
+    });
+
+    document.getElementById('markPracticeBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      markCurrentCard('practice');
+    });
+
+    document.getElementById('prevCardBtn').addEventListener('click', prevCard);
+    document.getElementById('nextCardBtn').addEventListener('click', nextCard);
+
+    document.getElementById('shuffleBtn').addEventListener('click', () => {
+      state.isShuffled = !state.isShuffled;
+      rebuildDeck(false);
+      renderAll();
+      showToast(state.isShuffled ? '已開啟隨機洗牌模式！' : '已恢復依課本順序排列。');
+    });
+
+    document.getElementById('resetProgressBtn').addEventListener('click', () => {
+      state.progressMap = {};
+      saveProgress();
+      renderProgressBar();
+      renderFlashCard();
+      showToast('已清除所有學習標記紀錄。');
+    });
+
+    document.getElementById('openGridBtn').addEventListener('click', openGridModal);
+    document.getElementById('closeGridBtn').addEventListener('click', closeGridModal);
+    document.getElementById('printGridBtn').addEventListener('click', () => {
+      window.print();
+    });
+
+    document.getElementById('gridModal').addEventListener('click', (e) => {
+      if (e.target.id === 'gridModal') {
+        closeGridModal();
+      }
+    });
+
+    // Keyboard shortcuts: Left / Right arrow to navigate, Space to flip, Escape to close modal
+    document.addEventListener('keydown', (e) => {
+      const modal = document.getElementById('gridModal');
+      if (modal && !modal.classList.contains('hidden')) {
+        if (e.key === 'Escape') closeGridModal();
+        return;
+      }
+
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        nextCard();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prevCard();
+      } else if (e.key === ' ') {
+        // Avoid double toggle if focus is already on flashcardInner
+        if (document.activeElement !== document.getElementById('flashcardInner')) {
+          e.preventDefault();
+          toggleFlip();
+        }
+      }
+    });
+
+    // Touch swipe support on flash card stage
+    let touchStartX = 0;
+    let touchEndX = 0;
+    const cardStage = document.getElementById('flashcardInner');
+    cardStage.addEventListener('touchstart', (e) => {
+      if (e.changedTouches && e.changedTouches.length > 0) {
+        touchStartX = e.changedTouches[0].screenX;
+      }
+    }, { passive: true });
+
+    cardStage.addEventListener('touchend', (e) => {
+      if (e.changedTouches && e.changedTouches.length > 0) {
+        touchEndX = e.changedTouches[0].screenX;
+        const diff = touchEndX - touchStartX;
+        if (Math.abs(diff) > 55) {
+          if (diff < 0) nextCard();
+          else prevCard();
+        }
+      }
+    }, { passive: true });
+
+    // Initial render
+    renderAll();
+  </script>
+</body>
+</html>
